@@ -17,13 +17,13 @@ Dead Current is a browser-based tower defense prototype. The player protects an 
 - Rocket tower damages enemies in an area.
 - Lightning tower chains between enemies and briefly stuns them.
 
-- Barracks deploys soldiers during waves. Soldiers fire low-damage ranged shots at nearby zombies, and zombies attack soldiers in melee. Soldiers undeploy when the wave ends.
+- Barracks deploys soldiers onto nearby road during waves, with collision spacing between them. Soldiers fire low-damage ranged shots at nearby zombies, and zombies attack soldiers in melee. Soldiers undeploy when the wave ends.
 - Flamethrower burns enemies at short range.
 - Cryo tower slows enemies with chilling rounds.
 - Autocannon fires heavy shells.
 - Toxic sprayer poisons enemies over time.
 
-Each tower has two independent three-tier upgrade chains, purchased in order. New zombie types are explained when first encountered. The design should allow more tower types later.
+Each tower has two independent four-tier tower-specific upgrade chains, purchased in order. New zombie types are explained when first encountered. The design should allow more tower types later.
 
 ## Visual direction
 
@@ -31,4 +31,4 @@ The game uses simple pixel-art characters and structures. Each zombie or turret 
 
 ## Current implementation
 
-`game.js` contains the canvas rendering, simulation, and controls. `style.css` styles the surrounding interface. Zombies enter through separate, unoccupied entrance lanes, follow the winding road, and push apart when they collide. Gun, shotgun, sniper, and rocket rounds travel as projectiles and collide with zombies. Lightning uses an immediate effect. Further iteration can develop the flowing swarm behavior and balance.
+`game.js` contains the canvas rendering, simulation, and controls. `style.css` styles the surrounding interface. Zombies enter through separate, unoccupied entrance lanes, choose between split routes, cross line-based checkpoints, and push apart when they collide. Gun, shotgun, sniper, and rocket rounds travel as projectiles and collide with zombies. Lightning uses an immediate effect. Further iteration can develop the flowing swarm behavior and balance.
