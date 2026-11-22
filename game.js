@@ -67,51 +67,18 @@ const shop=document.querySelector('#shop'),details=document.querySelector('#deta
 let seenKinds=new Set(),noticeQueue=[],noticeTimer;
 function showNotice(){if(!noticeQueue.length){notice.hidden=true;noticeTimer=null;return}notice.textContent=noticeQueue.shift();notice.hidden=false;noticeTimer=setTimeout(showNotice,6000)}
 function announce(kind){if(seenKinds.has(kind))return;seenKinds.add(kind);noticeQueue.push(({normal:'Walker · A standard zombie.',big:'Brute · Larger and tougher. Deals extra base damage.',armor:'Armored zombie · Resists gun, shotgun and sniper damage.',shock:'Insulated zombie · Immune to lightning damage and stun.',fire:'Fireproof zombie · Immune to fire damage and burning.',cold:'Frostproof zombie · Immune to cryo damage and freezing.',toxic:'Hazmat zombie · Immune to poison damage and poison.'})[kind]);if(!noticeTimer)showNotice()}
-const spritePatterns={
- gun:['..KKKKKK....','..KMMMMK....','.KMMHHMMK...','KMMMHMMMKKKK','KMMACAAAMMHK','KMMACAAAMMHK','KMMMHMMMKKKK','.KMMHHMMK...','..KMMMMK....','..KKKKKK....'],
- sniper:['..KKKKKK......','..KMMMMK......','.KMMHHMMK.....','KMMMAAMMKKKKKK','KMMMACAAMMMHHK','KMMMAAMMKKKKKK','.KMMHHMMK.....','..KMMMMK......','..KKKKKK......'],
- shotgun:['..KKKKKK.....','..KMMMMK.....','.KMHHHMMKKKK.','KMMMAAMMMHHKK','KMMMACAMMHHHK','KMMMAAMMMHHKK','.KMHHHMMKKKK.','..KMMMMK.....','..KKKKKK.....'],
- rocket:['..KKKKKK....','.KKMMMMKK...','KMMHHHHMMKK.','KMMMAAAAMMKK','KMMAACCAAMHK','KMMMAAAAMMKK','KMMHHHHMMKK.','.KKMMMMKK...','..KKKKKK....'],
- lightning:['..KKKKKK....','.KMMHHMMK...','KMMHAAHMMK..','KMMHCCAHMKK.','KMMACCAAMMHK','KMMHACCHMKK.','KMMHAAHMMK..','.KMMHHMMK...','..KKKKKK....'],
- barracks:['.KKKKKKKKKK.','KKMMMMMMMMKK','KMHHHHHHHHMK','KMHMMMMMMHMK','KMHMMCCMMHMK','KMHMCCCCMHMK','KMHMMCCMMHMK','KMHMMMMMMHMK','KMHHHHHHHHMK','KKMMMMMMMMKK','.KKKKKKKKKK.'],
- flame:['..KKKKKK.....','.KMMMMMMK....','KMMHHHHMMKK..','KMMAAAAMMMKKK','KMMACCAAMMHHK','KMMAAAAMMMKKK','KMMHHHHMMKK..','.KMMMMMMK....','..KKKKKK.....'],
- frost:['..KKKKKK....','.KMMHHMMK...','KMMHAAHMMK..','KMHACCAHMKK.','KMMHCCAHMMHK','KMHACCAHMKK.','KMMHAAHMMK..','.KMMHHMMK...','..KKKKKK....'],
- cannon:['..KKKKKK......','.KMMMMMMK.....','KMMHHHHMMKKKK.','KMMAAAAMMMMHHK','KMMACCAAMMMHHK','KMMAAAAMMMMHHK','KMMHHHHMMKKKK.','.KMMMMMMK.....','..KKKKKK......'],
- venom:['..KKKKKK....','.KMMHHMMK...','KMMHAAHMMKK.','KMMAACCAAMKK','KMMACCCAMMHK','KMMAACCAAMKK','KMMHAAHMMKK.','.KMMHHMMK...','..KKKKKK....']};
-function pixelSprite(pattern,palette){let c=document.createElement('canvas');c.width=Math.max(...pattern.map(row=>row.length));c.height=pattern.length;let g=c.getContext('2d');pattern.forEach((row,y)=>[...row].forEach((pixel,x)=>{if(palette[pixel]){g.fillStyle=palette[pixel];g.fillRect(x,y,1,1)}}));return c}
-function makeTowerSprite(type){
- const c=document.createElement('canvas');c.width=44;c.height=36;const g=c.getContext('2d'),accent=types[type].color;
- // A compact, shaded housing with mechanical details, facing right.
- g.fillStyle='#18241f';g.fillRect(7,7,23,22);g.fillRect(3,11,32,14);g.fillStyle='#384c3f';g.fillRect(8,8,21,20);g.fillRect(4,12,29,12);
- g.fillStyle='#74836a';g.fillRect(9,9,18,18);g.fillStyle='#a1ad8c';g.fillRect(10,10,16,3);g.fillStyle='#4e6251';g.fillRect(9,21,18,5);
- g.fillStyle='#202b25';g.fillRect(13,12,12,12);g.fillStyle=accent;g.fillRect(15,14,8,8);g.fillStyle='#dce3bb';g.fillRect(16,15,4,2);
- g.fillStyle='#1d2822';g.fillRect(24,14,17,8);g.fillStyle='#75876e';g.fillRect(25,15,13,3);g.fillStyle='#111c19';g.fillRect(38,13,5,10);
- g.fillStyle='#d9ba71';g.fillRect(10,15,2,2);g.fillRect(10,22,2,2);g.fillStyle='#a3b49a';g.fillRect(6,13,3,2);g.fillRect(6,21,3,2);
- if(type==='minigun'){g.fillStyle='#17231e';for(let y=11;y<=23;y+=4)g.fillRect(25,y,17,3);g.fillStyle='#bcc8a1';g.fillRect(27,12,12,1)}
- if(type==='mortar'){g.clearRect(0,0,44,36);g.fillStyle='#1e2c24';g.fillRect(8,7,28,22);g.fillStyle='#829078';g.fillRect(10,9,24,18);g.fillStyle='#303f35';g.fillRect(16,11,16,14);g.fillStyle='#141e19';g.fillRect(21,12,13,12);g.fillStyle='#d79a69';g.fillRect(26,14,6,8)}
- if(type==='pulse'){g.fillStyle='#241f35';g.fillRect(12,8,16,20);g.fillStyle=accent;g.fillRect(15,11,10,14);g.fillStyle='#efebff';g.fillRect(17,13,6,3)}
- if(type==='sniper'||type==='cannon'){g.fillStyle='#192620';g.fillRect(28,15,16,6);g.fillStyle='#9aaa92';g.fillRect(29,16,12,2)}
- if(type==='shotgun'){g.fillStyle='#1a2520';g.fillRect(26,10,14,6);g.fillRect(26,20,14,6);g.fillStyle='#899982';g.fillRect(28,11,10,2);g.fillRect(28,21,10,2)}
- if(type==='rocket'){g.clearRect(0,0,44,36);g.fillStyle='#1a2821';g.fillRect(5,8,28,20);g.fillRect(26,5,14,26);g.fillStyle='#6f7961';g.fillRect(7,10,22,16);g.fillStyle='#a4a68a';g.fillRect(8,11,18,3);g.fillStyle='#343f34';g.fillRect(25,6,13,24);g.fillStyle='#b66b4d';g.fillRect(27,8,8,20);g.fillStyle='#263129';for(let y=9;y<27;y+=6){g.fillRect(31,y,7,5);g.fillStyle='#e6b27e';g.fillRect(33,y+1,3,2);g.fillStyle='#263129'}g.fillStyle='#d5b06d';g.fillRect(9,17,4,3)}
- if(type==='lightning'||type==='frost'){g.fillStyle=accent;g.fillRect(12,5,3,8);g.fillRect(21,5,3,8);g.fillStyle='#e3efce';g.fillRect(13,5,1,5);g.fillRect(22,5,1,5)}
- if(type==='flame'||type==='venom'){g.fillStyle='#27372c';g.fillRect(4,8,9,20);g.fillStyle=accent;g.fillRect(6,10,5,15);g.fillStyle='#c4caa0';g.fillRect(7,11,2,8)}
- if(type==='barracks'){g.clearRect(0,0,44,36);g.fillStyle='#1d2923';g.fillRect(4,5,36,27);g.fillStyle='#526a59';g.fillRect(6,7,32,23);g.fillStyle='#8b9d7d';g.fillRect(8,8,28,4);g.fillStyle='#354b3d';g.fillRect(8,13,28,13);g.fillStyle='#70886c';for(let x=10;x<34;x+=6)g.fillRect(x,14,4,9);g.fillStyle='#1e2d27';g.fillRect(16,21,12,9);g.fillStyle='#d1c083';g.fillRect(18,22,8,2);g.fillStyle='#d8d8aa';g.fillRect(6,4,6,5);g.fillRect(32,4,6,5)}
- return c;
+const sprites = {}, towerIcons = {};
+for (const [type, spec] of Object.entries(types)) {
+  sprites[type] = FieldArt.tower(type, spec.color);
+  towerIcons[type] = sprites[type].toDataURL();
 }
-const sprites={};for(const type of Object.keys(types))sprites[type]=makeTowerSprite(type);
-function makeZombie(color){
- let c=document.createElement('canvas');c.width=32;c.height=24;let g=c.getContext('2d');
- // Facing right. Dark sleeves lead into two long, separated green arms.
- g.fillStyle='#243329';g.fillRect(14,6,12,12);g.fillRect(14,2,16,6);g.fillRect(14,16,16,6);
- g.fillStyle='#465848';g.fillRect(14,3,7,4);g.fillRect(14,17,7,4);
- g.fillStyle=color;g.fillRect(20,3,9,4);g.fillRect(20,17,9,4);g.fillRect(15,7,10,10);
- g.fillStyle='#b6d591';g.fillRect(21,3,6,1);g.fillRect(21,17,6,1);g.fillRect(16,8,6,2);
- g.fillStyle='#26352b';g.fillRect(22,9,2,2);g.fillRect(22,13,2,2);g.fillStyle='#e1e8b9';g.fillRect(23,9,1,1);g.fillRect(23,13,1,1);
- return c;
+const zombieSprites = {};
+for (const [kind, color] of Object.entries({normal:'#92b286',armor:'#c8ad84',shock:'#b89bd1',fire:'#e8a27c',cold:'#96cdd7',toxic:'#b9ca73'})) {
+  zombieSprites[kind] = [-1, 0, 1].map(step => FieldArt.zombie(kind, color, step));
 }
-const zombieSprites={};for(let [kind,color] of Object.entries({normal:'#86b96c',armor:'#c6a36f',shock:'#aa82b9',fire:'#e88962',cold:'#8cc9db',toxic:'#c6d05f'}))zombieSprites[kind]=makeZombie(color);
-function towerIcon(type){return sprites[type].toDataURL()}
-function ui(){document.querySelector('#money').textContent=money;document.querySelector('#health').textContent=health;document.querySelector('#wave').textContent=wave;document.querySelector('#cancel').hidden=!(building||aiming);document.querySelector('#placementLegend').hidden=!building;document.querySelector('#start').disabled=running||over;document.querySelector('#start').textContent=over?'OUTPOST LOST':running?'WAVE IN PROGRESS':'START WAVE →';shop.innerHTML='';Object.entries(types).forEach(([key,t])=>{let b=document.createElement('button');b.className='tower '+(building===key?'active':'');b.innerHTML=`<img class="icon" src="${towerIcon(key)}" alt=""><span><strong>${t.name}</strong></span><span class="cost">${t.cost} ⬡</span>`;b.onclick=()=>{upgradeDialog.hidden=true;if(aiming){money+=types[aiming.type].cost;towers=towers.filter(t=>t!==aiming);aiming=null}building=key;selected=null;ui()};shop.appendChild(b)});if(selected){let t=selected, tracks=upgrades[t.type];details.innerHTML=`<small>SELECTED TOWER</small><h2>${types[t.type].name}</h2><p>Buy each tier in order.${t.type==='barracks'?`<br>Soldiers ${soldiers.filter(a=>a.home===t&&a.hp>0).length} / ${t.upgrades[1]>=3?7:t.upgrades[1]?5:3}${running?' deployed':' · deploy during waves'}`:''}</p><button class="sell" id="sellTower">SELL · ${Math.floor(t.spent*.7)} ⬡</button>${tracks.map((description,i)=>{let steps=description;return `<div class="track"><small>TRACK ${i+1}</small>${steps.map((step,n)=>{let level=t.upgrades[i],cost=[60,90,140,210][n],label=n<level?'PURCHASED':n===level?`${cost} ⬡`:'LOCKED';return `<button class="upgrade" id="track${i}-${n}" ${n!==level?'disabled':''}>${n+1}. ${step}<br>${label}</button>`}).join('')}</div>`}).join('')}`;document.querySelector('#sellTower').onclick=()=>{money+=Math.floor(t.spent*.7);towers=towers.filter(a=>a!==t);soldiers=soldiers.filter(a=>a.home!==t);selected=null;upgradeDialog.hidden=true;status.textContent='Tower sold';ui()};tracks.forEach((description,i)=>{let level=t.upgrades[i];if(level>=4)return;document.querySelector(`#track${i}-${level}`).onclick=()=>{let cost=[60,90,140,210][level];if(money<cost){status.textContent='Not enough supplies';return}money-=cost;t.upgrades[i]++;t.spent+=cost;if(t.type==='barracks'&&i===1&&(level===0||level===2))t.cool=0;applyUpgrade(t,i,level);ui()}})}else details.innerHTML='<small>SELECTED TOWER</small><p>Select a placed tower to view its upgrades.</p>'}
+const soldierSprite = FieldArt.infantry();
+function towerIcon(type) { return towerIcons[type]; }
+function ui(){document.querySelector('#money').textContent=money;document.querySelector('#health').textContent=health;document.querySelector('#wave').textContent=wave;document.querySelector('#cancel').hidden=!(building||aiming);document.querySelector('#placementLegend').hidden=!building;document.querySelector('#start').disabled=running||over;document.querySelector('#start').textContent=over?'Outpost lost':running?'Wave in progress':'Start wave →';shop.innerHTML='';Object.entries(types).forEach(([key,t])=>{let b=document.createElement('button');b.className='tower '+(building===key?'active':'');b.innerHTML=`<img class="icon" src="${towerIcon(key)}" alt=""><span><strong>${t.name}</strong></span><span class="cost">${t.cost} ⬡</span>`;b.onclick=()=>{upgradeDialog.hidden=true;if(aiming){money+=types[aiming.type].cost;towers=towers.filter(t=>t!==aiming);aiming=null}building=key;selected=null;ui()};shop.appendChild(b)});if(selected){let t=selected, tracks=upgrades[t.type];details.innerHTML=`<small>SELECTED TOWER</small><h2>${types[t.type].name}</h2><p>Buy each tier in order.${t.type==='barracks'?`<br>Soldiers ${soldiers.filter(a=>a.home===t&&a.hp>0).length} / ${t.upgrades[1]>=3?7:t.upgrades[1]?5:3}${running?' deployed':' · deploy during waves'}`:''}</p><button class="sell" id="sellTower">SELL · ${Math.floor(t.spent*.7)} ⬡</button>${tracks.map((description,i)=>{let steps=description;return `<div class="track"><small>TRACK ${i+1}</small>${steps.map((step,n)=>{let level=t.upgrades[i],cost=[60,90,140,210][n],label=n<level?'PURCHASED':n===level?`${cost} ⬡`:'LOCKED';return `<button class="upgrade" id="track${i}-${n}" ${n!==level?'disabled':''}>${n+1}. ${step}<br>${label}</button>`}).join('')}</div>`}).join('')}`;document.querySelector('#sellTower').onclick=()=>{money+=Math.floor(t.spent*.7);towers=towers.filter(a=>a!==t);soldiers=soldiers.filter(a=>a.home!==t);selected=null;upgradeDialog.hidden=true;status.textContent='Tower sold';ui()};tracks.forEach((description,i)=>{let level=t.upgrades[i];if(level>=4)return;document.querySelector(`#track${i}-${level}`).onclick=()=>{let cost=[60,90,140,210][level];if(money<cost){status.textContent='Not enough supplies';return}money-=cost;t.upgrades[i]++;t.spent+=cost;if(t.type==='barracks'&&i===1&&(level===0||level===2))t.cool=0;applyUpgrade(t,i,level);ui()}})}else details.innerHTML='<small>SELECTED TOWER</small><p>Select a placed tower to view its upgrades.</p>'}
 function applyUpgrade(t,path,tier){
  const damage={minigun:[[0,.35,0,.4],[0,0,.35,0]],mortar:[[0,.4,0,.4],[0,0,0,0]],pulse:[[.35,0,.4,0],[0,0,0,0]],gun:[[0,0,.4,0],[0,0,0,0]],sniper:[[0,.5,0,0],[0,0,0,0]],shotgun:[[0,.35,0,0],[0,.35,0,0]],rocket:[[0,.4,0,.6],[0,0,0,0]],lightning:[[0,.35,0,.5],[0,0,0,0]],flame:[[0,.35,0,.5],[0,0,0,0]],frost:[[0,.35,0,0],[0,0,0,0]],cannon:[[0,.4,0,.5],[0,0,0,0]],venom:[[0,0,.4,0],[0,0,0,0]]};
  const ranges={minigun:[1,1],mortar:[1,0],pulse:[1,0],gun:[1,1],sniper:[1,1],shotgun:[1,0],flame:[1,1],frost:[1,1],cannon:[1,1],venom:[1,1]};
@@ -179,20 +146,76 @@ for(let pass=0;pass<2;pass++){
  for(let e of enemies){if(e.hp<=0)continue;let cx=Math.floor(e.x/cellSize),cy=Math.floor(e.y/cellSize);for(let y=cy-1;y<=cy+1;y++)for(let x=cx-1;x<=cx+1;x++){let bucket=buckets.get(x+','+y);if(!bucket)continue;for(let other of bucket){let dx=e.x-other.x,dy=e.y-other.y,d=Math.hypot(dx,dy),minimum=e.r+other.r;if(d>=minimum)continue;if(d<.01){dx=0;dy=1;d=1}let shift=(minimum-d)/2,ex=dx/d*shift,ey=dy/d*shift;e.x+=ex;e.y+=ey;other.x-=ex;other.y-=ey;let relative=(e.vx-other.vx)*dx/d+(e.vy-other.vy)*dy/d;if(relative<0){let impulse=-relative*.35;e.vx+=dx/d*impulse;e.vy+=dy/d*impulse;other.vx-=dx/d*impulse;other.vy-=dy/d*impulse}keepOnRoad(e);keepOnRoad(other)}}let key=cx+','+cy;if(!buckets.has(key))buckets.set(key,[]);buckets.get(key).push(e)}
 }
 for(let t of towers){if(t===aiming)continue;t.cool-=dt;if(t.type==='barracks'){if(running&&t.cool<=0&&soldiers.filter(a=>a.home===t).length<(t.upgrades[1]>=3?7:t.upgrades[1]?5:3)){let rally=nearestRoad(t.x,t.y),dx=t.x-rally.x,dy=t.y-rally.y,d=Math.hypot(dx,dy)||1;soldiers.push({home:t,x:rally.x+dx/d*12,y:rally.y+dy/d*12,hp:t.upgrades[1]>=4?90:t.upgrades[1]>=2?67.5:45,cool:0,rally});t.cool=types.barracks.rate*(t.upgrades[0]>=3?.5:1);if(selected===t)ui()}continue}let target=enemies.filter(e=>{let angle=Math.atan2(e.y-t.y,e.x-t.x),difference=Math.atan2(Math.sin(angle-t.facing),Math.cos(angle-t.facing));return e.hp>0&&Math.hypot(e.x-t.x,e.y-t.y)<t.range&&(omnidirectional.includes(t.type)||Math.abs(difference)<=Math.PI/4)}).sort((a,b)=>b.x-a.x)[0];if(target&&t.cool<=0){fire(t,target);t.cool=types[t.type].rate*((t.upgrades[0]&&['gun','lightning','flame','cannon','minigun'].includes(t.type))?.75:1)*((t.type==='minigun'&&t.upgrades[0]>=3||t.type==='mortar'&&t.upgrades[0]>=3||t.type==='pulse'&&t.upgrades[0]>=2)?.75:1)*((t.type==='pulse'&&t.upgrades[0]>=4)?.75:1)*((t.upgrades[0]>=3&&['shotgun','cannon'].includes(t.type))?.75:1)*((t.upgrades[1]>=3&&t.type==='sniper'||t.upgrades[1]>=2&&t.type==='rocket'||t.upgrades[1]>=4&&t.type==='frost')?.75:1)}}for(let a of soldiers){a.cool-=dt;let target=enemies.filter(e=>e.hp>0&&Math.hypot(e.x-a.home.x,e.y-a.home.y)<a.home.range+60).sort((x,y)=>Math.hypot(x.x-a.x,x.y-a.y)-Math.hypot(y.x-a.x,y.y-a.y))[0];if(target){let dx=target.x-a.x,dy=target.y-a.y,d=Math.hypot(dx,dy);a.angle=Math.atan2(dy,dx);if(d>85){a.x+=dx/d*45*dt;a.y+=dy/d*45*dt}else if(a.cool<=0){projectiles.push({x:a.x,y:a.y,dx:dx/d,dy:dy/d,speed:400,remaining:100,damage:a.home.upgrades[0]>=4?9:a.home.upgrades[0]>=2?6:4,type:'soldier',pierce:1,ability:[],hit:[]});a.cool=a.home.upgrades[0]?.5:.8}}else{let dx=a.rally.x-a.x,dy=a.rally.y-a.y,d=Math.hypot(dx,dy);if(d>5){a.x+=dx/d*40*dt;a.y+=dy/d*40*dt}}}let previousSoldierCount=soldiers.length;soldiers=soldiers.filter(a=>a.hp>0);if(selected&&selected.type==='barracks'&&soldiers.length!==previousSoldierCount)ui();for(let i=0;i<soldiers.length;i++)for(let j=i+1;j<soldiers.length;j++){let a=soldiers[i],b=soldiers[j],dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy);if(d<16){if(d<.01){dx=1;dy=0;d=1}let shift=(16-d)/2;a.x-=dx/d*shift;a.y-=dy/d*shift;b.x+=dx/d*shift;b.y+=dy/d*shift}}moveProjectiles(dt);let dead=enemies.filter(e=>e.hp<=0&&e.x<=940);if(dead.length){money+=dead.length*4;ui()}enemies=enemies.filter(e=>e.hp>0);effects.forEach(e=>e.time-=dt);effects=effects.filter(e=>e.time>0);if(running&&!remaining&&!enemies.length){running=false;soldiers=[];money+=30+wave*5;status.textContent='Wave cleared · supplies delivered';ui()}}
-function makeMap(){
- let c=document.createElement('canvas');c.width=500;c.height=325;let g=c.getContext('2d'),seed=371;function random(){seed=(seed*1664525+1013904223)>>>0;return seed/4294967296}
- g.fillStyle='#40573c';g.fillRect(0,0,500,325);
- // Layer irregular patches and small stones across the high ground.
- for(let i=0;i<420;i++){let x=random()*500,y=random()*325,rx=3+random()*15,ry=2+random()*7;g.fillStyle=['#3a5038','#496344','#4c6645','#394f37'][i%4];g.beginPath();g.ellipse(x,y,rx,ry,random()*.5,0,Math.PI*2);g.fill()}
- for(let layer of [{color:'#334234',extra:42},{color:'#7f7858',extra:18},{color:'#a6906c',extra:5},{color:'#bca77f',extra:0}])for(let {a,b,width} of roadSegments()){g.lineCap='round';g.beginPath();g.moveTo(a.x/2,a.y/2);g.lineTo(b.x/2,b.y/2);g.strokeStyle=layer.color;g.lineWidth=(width+layer.extra)/2;g.stroke()}
- for(let i=0;i<700;i++){let x=random()*500,y=random()*325,d=pathDistance(x*2,y*2);if(d>24){g.fillStyle=i%3?'#648653':'#a2a66d';g.fillRect(x,y,1.5,2.5);if(i%4===0){g.fillStyle='#2f4932';g.fillRect(x+2,y+1,3,2)}}else if(d<-4&&i%3===0){g.fillStyle='#a18b68';g.fillRect(x,y,2+random()*3,1)}}
- g.fillStyle='#1f2d29';g.fillRect(458,130,42,70);g.fillStyle='#65765d';g.fillRect(464,136,36,58);g.fillStyle='#c7bc7d';g.fillRect(470,144,30,42);g.fillStyle='#273a32';g.fillRect(476,150,24,30);g.fillStyle='#e0d584';g.fillRect(480,158,20,4);return c;
+function makeMap() {
+  const seed = 372 + Object.values(maps).indexOf(activeMap) * 101;
+  return FieldArt.terrain(routes, roadSegments(), pathDistance, seed);
 }
 function makePlacementOverlay(){
  let c=document.createElement('canvas');c.width=500;c.height=325;let g=c.getContext('2d'),data=g.createImageData(c.width,c.height);
  for(let y=0;y<c.height;y++)for(let x=0;x<c.width;x++){let px=x*2+1,py=y*2+1,valid=px>=45&&px<=910&&py>=45&&py<=605&&pathDistance(px,py)>=21,i=(y*c.width+x)*4;data.data[i]=valid?115:190;data.data[i+1]=valid?195:63;data.data[i+2]=valid?100:50;data.data[i+3]=valid?42:75}g.putImageData(data,0,0);return c;
 }
-let mapArt=makeMap(),placementOverlay=makePlacementOverlay();
-function draw(){ctx.imageSmoothingEnabled=false;ctx.drawImage(mapArt,0,0,1000,650);if(building){ctx.drawImage(placementOverlay,0,0,1000,650);for(let placed of towers){ctx.beginPath();ctx.arc(placed.x,placed.y,44,0,Math.PI*2);ctx.fillStyle='#c03f3280';ctx.fill()}let t=types[building];ctx.strokeStyle='#dce99a';ctx.globalAlpha=.5;ctx.beginPath();ctx.arc(mouse.x,mouse.y,t.range,0,7);ctx.stroke();ctx.globalAlpha=1;let valid=canPlace(mouse);ctx.fillStyle=valid?'#dce99a66':'#ee554c88';ctx.strokeStyle=valid?'#e1eaa2':'#ff7468';ctx.lineWidth=2;ctx.beginPath();ctx.arc(mouse.x,mouse.y,22,0,Math.PI*2);ctx.fill();ctx.stroke()}let preview=aiming||selected;if(preview){let direction=aiming?Math.atan2(mouse.y-preview.y,mouse.x-preview.x):preview.facing;ctx.fillStyle='#e2eaa433';ctx.strokeStyle='#e2eaa4';ctx.beginPath();ctx.moveTo(preview.x,preview.y);ctx.arc(preview.x,preview.y,preview.range,omnidirectional.includes(preview.type)?0:direction-Math.PI/4,omnidirectional.includes(preview.type)?Math.PI*2:direction+Math.PI/4);ctx.closePath();ctx.fill();ctx.stroke();if(aiming)preview.angle=direction}for(let t of towers){ctx.save();ctx.translate(t.x,t.y);ctx.imageSmoothingEnabled=false;ctx.fillStyle='#1a2822';ctx.beginPath();ctx.arc(0,1,23,0,Math.PI*2);ctx.fill();ctx.fillStyle='#71836b';ctx.beginPath();ctx.arc(0,0,20,0,Math.PI*2);ctx.fill();ctx.fillStyle='#354a3b';ctx.beginPath();ctx.arc(0,0,16,0,Math.PI*2);ctx.fill();ctx.fillStyle='#b9c2a0';for(let i=0;i<8;i++){let a=i*Math.PI/4;ctx.fillRect(Math.cos(a)*18-1,Math.sin(a)*18-1,2,2)}ctx.rotate(t.angle);let sprite=sprites[t.type];ctx.drawImage(sprite,-22,-18,44,36);ctx.restore()}for(let a of soldiers){ctx.save();ctx.translate(a.x,a.y);ctx.rotate(a.angle||0);ctx.fillStyle='#1d2a29';ctx.fillRect(-7,-7,14,14);ctx.fillRect(2,-2,13,4);ctx.fillStyle='#425d54';ctx.fillRect(-6,-6,10,12);ctx.fillStyle='#81a28b';ctx.fillRect(-4,-5,6,10);ctx.fillStyle='#c6b38c';ctx.fillRect(1,-4,5,8);ctx.fillStyle='#344a3d';ctx.fillRect(2,-5,4,2);ctx.fillStyle='#222c28';ctx.fillRect(5,-1,9,2);ctx.fillStyle='#b9bb9b';ctx.fillRect(7,-2,5,1);ctx.restore()}for(let e of enemies){ctx.save();ctx.translate(e.x,e.y);ctx.rotate(e.angle);let s=e.r/9;ctx.scale(s,s);ctx.imageSmoothingEnabled=false;let sprite=zombieSprites[e.kind];ctx.drawImage(sprite,-16,-12,32,24);ctx.restore();if(e.hp<e.max){ctx.fillStyle='#293429';ctx.fillRect(e.x-10,e.y-e.r-7,20,3);ctx.fillStyle='#d4e385';ctx.fillRect(e.x-10,e.y-e.r-7,20*Math.max(0,e.hp/e.max),3)}}for(let p of projectiles){ctx.save();ctx.translate(p.x,p.y-(p.type==='mortar'?Math.sin(Math.PI*(1-p.remaining/p.total))*24:0));ctx.rotate(Math.atan2(p.dy,p.dx));ctx.fillStyle=p.type==='rocket'?'#e17849':p.type==='sniper'?'#fff3c0':'#e9b65d';ctx.fillRect(-5,-2,10,4);ctx.fillStyle='#fff1be';ctx.fillRect(2,-1,3,2);ctx.restore()}for(let e of effects){ctx.strokeStyle=e.color;ctx.lineWidth=3;ctx.beginPath();if(e.flash){ctx.fillStyle=e.color;ctx.fillRect(e.x-3,e.y-3,6,6);ctx.fillRect(e.x-6,e.y-1,12,2)}else if(e.r)ctx.arc(e.x,e.y,e.r*(1-e.time/.3),0,7);else{ctx.moveTo(e.x,e.y);ctx.lineTo(e.x2,e.y2)}if(!e.flash)ctx.stroke()}if(over){ctx.fillStyle='#111b16bb';ctx.fillRect(0,0,1000,650);ctx.fillStyle='#f2e9c2';ctx.textAlign='center';ctx.font='bold 52px Barlow Condensed';ctx.fillText('THE OUTPOST HAS FALLEN',500,310);ctx.font='18px IBM Plex Mono';ctx.fillText('Refresh to try again',500,350)}}let last=performance.now();function loop(now){let dt=Math.min(.05,(now-last)/1000);last=now;update(dt);draw();requestAnimationFrame(loop)}ui();requestAnimationFrame(loop);
+let mapArt, placementOverlay;
+function drawRanges() {
+  if (building) {
+    ctx.drawImage(placementOverlay,0,0,1000,650);
+    for (const t of towers) {
+      ctx.beginPath(); ctx.arc(t.x,t.y,44,0,Math.PI*2);
+      ctx.fillStyle='#bd483b55'; ctx.fill();
+    }
+    const valid=canPlace(mouse);
+    ctx.beginPath(); ctx.arc(mouse.x,mouse.y,types[building].range,0,Math.PI*2);
+    ctx.strokeStyle='#f5f1d68c'; ctx.lineWidth=1; ctx.stroke();
+    ctx.globalAlpha=.66;
+    ctx.drawImage(sprites[building],mouse.x-32,mouse.y-32,64,64);
+    ctx.globalAlpha=1;
+    ctx.beginPath(); ctx.arc(mouse.x,mouse.y,22,0,Math.PI*2);
+    ctx.fillStyle=valid?'#9bef9f48':'#f3615199';
+    ctx.strokeStyle=valid?'#ccf7b5':'#ff927d'; ctx.lineWidth=2; ctx.fill(); ctx.stroke();
+  }
+  const tower=aiming||selected;
+  if (!tower) return;
+  const angle=aiming?Math.atan2(mouse.y-tower.y,mouse.x-tower.x):tower.facing;
+  ctx.beginPath();
+  if (omnidirectional.includes(tower.type)) ctx.arc(tower.x,tower.y,tower.range,0,2*Math.PI);
+  else {
+    ctx.moveTo(tower.x,tower.y);
+    ctx.arc(tower.x,tower.y,tower.range,angle-Math.PI/4,angle+Math.PI/4);
+    ctx.closePath();
+  }
+  ctx.fillStyle='#f5dba424'; ctx.strokeStyle='#ffe0ae'; ctx.lineWidth=1.4; ctx.fill(); ctx.stroke();
+  if(aiming) tower.angle=angle;
+}
+function drawUnit(sprite,unit,left,top,width,height) {
+  ctx.save(); ctx.translate(unit.x,unit.y); ctx.rotate(unit.angle||0);
+  ctx.drawImage(sprite,left,top,width,height); ctx.restore();
+}
+function draw() {
+  if (!started) return;
+  ctx.drawImage(mapArt,0,0,1000,650);
+  drawRanges();
+  for (const t of towers) drawUnit(sprites[t.type],t,-32,-32,64,64);
+  for (const a of soldiers) drawUnit(soldierSprite,a,-14,-12,32,24);
+  for (const e of enemies) {
+    const size=e.r/9;
+    const frame=e.stun>0?1:Math.round(Math.sin(e.phase))+1;
+    drawUnit(zombieSprites[e.kind][frame],e,-15*size,-14*size,34*size,28*size);
+    if(e.hp<e.max){
+      ctx.fillStyle='#253533'; ctx.fillRect(e.x-9,e.y-e.r-5,18,2.5);
+      ctx.fillStyle='#f4ce93'; ctx.fillRect(e.x-9,e.y-e.r-5,18*Math.max(0,e.hp/e.max),2.5);
+    }
+  }
+  for(const p of projectiles) FieldArt.round(ctx,p);
+  for(const e of effects) FieldArt.effect(ctx,e);
+  if(over){
+    ctx.fillStyle='#102326c9'; ctx.fillRect(0,0,1000,650);
+    ctx.fillStyle='#f4f0dd'; ctx.textAlign='center'; ctx.font='bold 46px system-ui';
+    ctx.fillText('The outpost has fallen',500,310); ctx.font='18px system-ui';
+    ctx.fillText('Refresh to try again',500,350);
+  }
+}
+const landscape = document.querySelector('#landscape');
+FieldArt.landscape(landscape);
+window.addEventListener('resize', () => { if (!started) FieldArt.landscape(landscape); });
+let last=performance.now();function loop(now){let dt=Math.min(.05,(now-last)/1000);last=now;update(dt);draw();requestAnimationFrame(loop)}ui();requestAnimationFrame(loop);
 
 document.querySelector('#play').onclick=()=>{let map=maps[document.querySelector('#mapSelect').value];path=map.path.map(([x,y])=>({x,y}));roadWidths=map.widths;activeMap=map;buildRoutes();flowField=buildFlowField();mapArt=makeMap();placementOverlay=makePlacementOverlay();started=true;document.querySelector('#menu').hidden=true;last=performance.now()};

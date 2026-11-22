@@ -30,8 +30,8 @@ Each tower has two independent four-tier tower-specific upgrade chains, purchase
 
 ## Visual direction
 
-The game uses simple pixel-art characters and structures. Each zombie or turret is drawn from a small number of blocky pixels, while the whole sprite rotates smoothly as it moves or aims. Zombies appear in different colors to distinguish enemy types. The desired horde movement should feel like a flowing swarm.
+Dead Current uses smooth, illustrated terrain and top-down units. Pine groves, contour lines, and sandy roads distinguish the high ground from the horde’s routes. Each defense has its own mechanical silhouette, shared between the armory, placement preview, and battlefield. Zombies reach ahead with both arms as they move. Body color identifies resistance, with additional helmet plating on armored zombies. The title screen shows the outpost lookout at dusk.
 
 ## Current implementation
 
-`game.js` contains the canvas rendering, simulation, and controls. `style.css` styles the surrounding interface. Zombies enter through separate, unoccupied entrance lanes, move under a shared forward pull, slide along the road boundaries, and push apart when they collide. A shared navigation field measures progress for soldier pursuit. Gun, shotgun, sniper, and rocket rounds travel as projectiles and collide with zombies. Lightning uses an immediate effect. Further iteration can develop the flowing swarm behavior and balance.
+`art.js` draws the landscape, terrain, units, and combat effects. Static artwork and unit poses are cached at high resolution. `game.js` handles the simulation, controls, and frame composition. `style.css` styles the surrounding interface. Zombies enter through separate, unoccupied entrance lanes, move under a shared forward pull, slide along the road boundaries, and push apart when they collide. A shared navigation field measures progress for soldier pursuit. Gun, shotgun, sniper, and rocket rounds travel as projectiles and collide with zombies. Lightning uses an immediate effect. Further iteration can develop the flowing swarm behavior and balance.
