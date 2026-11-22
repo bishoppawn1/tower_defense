@@ -25,4 +25,4 @@ The game uses simple pixel-art characters and structures. Each zombie or turret 
 
 ## Current implementation
 
-`game.js` contains the canvas rendering, simulation, and controls. `style.css` styles the surrounding interface. Zombies follow the winding road and push apart when they collide. Towers use immediate attack effects. Further iteration can develop the flowing swarm behavior and balance.
+`game.js` contains the canvas rendering, simulation, and controls. `style.css` styles the surrounding interface. Zombies follow the winding road and push apart when they collide. Gun, shotgun, sniper, and rocket rounds travel as projectiles and collide with zombies. Lightning uses an immediate effect. Further iteration can develop the flowing swarm behavior and balance.
