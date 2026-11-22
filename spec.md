@@ -7,13 +7,13 @@ Dead Current is a browser-based tower defense prototype. The player protects an 
 - The player chooses when to begin each wave with the Start Wave button.
 - Zombies enter from the left and move toward the outpost. Each zombie that reaches it damages the base. The game ends when base health reaches zero.
 - Defeated zombies award supplies. Clearing a wave also grants a supply bonus. Each wave increases the number of enemies, and later waves introduce larger zombies and resistance to certain attacks.
-- Players select a tower from the build panel and click a clear high-ground position to place it. Selecting a placed tower opens its firepower and range upgrade paths. Escape cancels placement.
+- Players select a tower from the build panel and click a clear high-ground position, then click again to set its fixed firing direction. Towers target enemies within a 90-degree firing arc. Selecting a placed tower opens its firepower and range upgrade paths. Escape cancels placement.
 
 ## Towers
 
 - Gun tower provides reliable single-target fire.
 - Sniper tower attacks at long range with piercing shots.
-- Shotgun tower fires in every direction at short range.
+- Shotgun tower fires a directional spread of pellets at short range.
 - Rocket tower damages enemies in an area.
 - Lightning tower chains between enemies and briefly stuns them.
 
