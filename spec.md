@@ -23,7 +23,7 @@ Dead Current is a browser-based tower defense prototype. The player protects an 
 - Autocannon fires heavy shells.
 - Toxic sprayer poisons enemies over time.
 
-Each tower has two purchasable ability upgrades. The design should allow more tower types later.
+Each tower has two independent three-tier upgrade chains, purchased in order. The design should allow more tower types later.
 
 ## Visual direction
 
@@ -31,4 +31,4 @@ The game uses simple pixel-art characters and structures. Each zombie or turret 
 
 ## Current implementation
 
-`game.js` contains the canvas rendering, simulation, and controls. `style.css` styles the surrounding interface. Zombies follow the winding road and push apart when they collide. Gun, shotgun, sniper, and rocket rounds travel as projectiles and collide with zombies. Lightning uses an immediate effect. Further iteration can develop the flowing swarm behavior and balance.
+`game.js` contains the canvas rendering, simulation, and controls. `style.css` styles the surrounding interface. Zombies enter through separate, unoccupied entrance lanes, follow the winding road, and push apart when they collide. Gun, shotgun, sniper, and rocket rounds travel as projectiles and collide with zombies. Lightning uses an immediate effect. Further iteration can develop the flowing swarm behavior and balance.
