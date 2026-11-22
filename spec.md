@@ -17,7 +17,7 @@ Dead Current is a browser-based tower defense prototype. The player protects an 
 - Rocket tower damages enemies in an area.
 - Lightning tower chains between enemies and briefly stuns them.
 
-- Barracks deploys soldiers during waves. Soldiers engage nearby zombies, and zombies attack soldiers in melee.
+- Barracks deploys soldiers during waves. Soldiers fire low-damage ranged shots at nearby zombies, and zombies attack soldiers in melee. Soldiers undeploy when the wave ends.
 - Flamethrower burns enemies at short range.
 - Cryo tower slows enemies with chilling rounds.
 - Autocannon fires heavy shells.
