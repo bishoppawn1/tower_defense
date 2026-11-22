@@ -17,7 +17,7 @@ Dead Current is a browser-based tower defense prototype. The player protects an 
 - Rocket tower damages enemies in an area.
 - Lightning tower chains between enemies and briefly stuns them.
 
-- Barracks deploys soldiers onto nearby road during waves, with collision spacing between them. Soldiers fire low-damage ranged shots at nearby zombies, and nearby zombies chase soldiers and attack them in melee. Soldiers undeploy when the wave ends.
+- Barracks deploys soldiers onto nearby road during waves, with collision spacing between them. Soldiers fire low-damage ranged shots at nearby zombies, and zombies chase soldiers ahead of them along the road and attack them in melee. Soldiers undeploy when the wave ends.
 - Flamethrower burns enemies at short range.
 - Cryo tower slows enemies with chilling rounds.
 - Autocannon fires heavy shells.
@@ -31,4 +31,4 @@ The game uses simple pixel-art characters and structures. Each zombie or turret 
 
 ## Current implementation
 
-`game.js` contains the canvas rendering, simulation, and controls. `style.css` styles the surrounding interface. Zombies enter through separate, unoccupied entrance lanes, choose between split routes, cross line-based checkpoints, and push apart when they collide. Gun, shotgun, sniper, and rocket rounds travel as projectiles and collide with zombies. Lightning uses an immediate effect. Further iteration can develop the flowing swarm behavior and balance.
+`game.js` contains the canvas rendering, simulation, and controls. `style.css` styles the surrounding interface. Zombies enter through separate, unoccupied entrance lanes, navigate the connected roads using a flow field and push apart when they collide. Gun, shotgun, sniper, and rocket rounds travel as projectiles and collide with zombies. Lightning uses an immediate effect. Further iteration can develop the flowing swarm behavior and balance.
