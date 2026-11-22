@@ -84,7 +84,7 @@ function fire(t,target){
    projectiles.push({x:t.x,y:t.y,dx:Math.cos(angle),dy:Math.sin(angle),speed:type==='sniper'?700:480,remaining:t.range,damage:t.damage,type,pierce:type==='sniper'?(t.upgrades[0]>=3?6:t.upgrades[0]>=1?4:2):(type==='gun'&&t.upgrades[1]?2:type==='cannon'&&t.upgrades[1]>=4?5:type==='cannon'&&t.upgrades[1]?3:type==='shotgun'&&t.upgrades[1]>=3?2:type==='flame'&&t.upgrades[1]>=4?2:type==='frost'&&t.upgrades[1]>=3?2:type==='venom'&&t.upgrades[1]>=3?2:1),ability:t.upgrades.slice(),ignoreArmor:(type==='gun'&&t.upgrades[1]>=3)||(type==='cannon'&&t.upgrades[1]>=3)||(type==='venom'&&t.upgrades[0]>=2),stun:type==='sniper'&&t.upgrades[1],hit:[]});
   }
  }else if(type==='rocket'){
-  projectiles.push({x:t.x,y:t.y,dx:Math.cos(t.angle),dy:Math.sin(t.angle),speed:260,remaining:Math.hypot(target.x-t.x,target.y-t.y),damage:t.damage,type,pierce:1,hit:[],radius:t.upgrades[0]>=3?100:t.upgrades[0]?80:55,slow:t.upgrades[1],burn:t.upgrades[1]>=3?(t.upgrades[1]>=4?5:3):0});
+  projectiles.push({x:t.x,y:t.y,dx:Math.cos(t.angle),dy:Math.sin(t.angle),speed:260,remaining:Math.hypot(target.x-t.x,target.y-t.y),damage:t.damage,type,pierce:1,hit:[],radius:t.upgrades[0]>=3?65:t.upgrades[0]?48:35,slow:t.upgrades[1],burn:t.upgrades[1]>=3?(t.upgrades[1]>=4?5:3):0});
  }else if(type==='lightning'){
   let current=target,seen=[];
   for(let i=0;i<(t.upgrades[1]>=3?10:t.upgrades[1]?7:4)&&current;i++){
