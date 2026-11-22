@@ -17,7 +17,13 @@ Dead Current is a browser-based tower defense prototype. The player protects an 
 - Rocket tower damages enemies in an area.
 - Lightning tower chains between enemies and briefly stuns them.
 
-These five towers are the prototype roster. The design should allow more tower types later.
+- Barracks deploys soldiers during waves. Soldiers engage nearby zombies, and zombies attack soldiers in melee.
+- Flamethrower burns enemies at short range.
+- Cryo tower slows enemies with chilling rounds.
+- Autocannon fires heavy shells.
+- Toxic sprayer poisons enemies over time.
+
+Each tower has two purchasable ability upgrades. The design should allow more tower types later.
 
 ## Visual direction
 
