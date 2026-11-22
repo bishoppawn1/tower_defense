@@ -89,8 +89,7 @@ const sprites={};for(const type of Object.keys(types))sprites[type]=makeTowerSpr
 function makeZombie(color){
  let c=document.createElement('canvas');c.width=32;c.height=24;let g=c.getContext('2d');
  // Facing right. Dark sleeves lead into two long, separated green arms.
- g.fillStyle='#243329';g.fillRect(3,5,16,14);g.fillRect(14,2,16,6);g.fillRect(14,16,16,6);
- g.fillStyle='#614f43';g.fillRect(4,6,11,12);g.fillStyle='#8e755c';g.fillRect(5,7,7,2);
+ g.fillStyle='#243329';g.fillRect(14,6,12,12);g.fillRect(14,2,16,6);g.fillRect(14,16,16,6);
  g.fillStyle='#465848';g.fillRect(14,3,7,4);g.fillRect(14,17,7,4);
  g.fillStyle=color;g.fillRect(20,3,9,4);g.fillRect(20,17,9,4);g.fillRect(15,7,10,10);
  g.fillStyle='#b6d591';g.fillRect(21,3,6,1);g.fillRect(21,17,6,1);g.fillRect(16,8,6,2);
