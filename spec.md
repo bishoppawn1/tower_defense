@@ -4,15 +4,15 @@ Dead Current is a browser-based tower defense prototype. The player protects an 
 
 ## Gameplay
 
-- The player chooses when to begin each wave with the Start Wave button.
+- The player starts from a main menu and chooses when to begin each wave with the Start Wave button.
 - Zombies enter from the left and move toward the outpost. Each zombie that reaches it damages the base. The game ends when base health reaches zero.
 - Defeated zombies award supplies. Clearing a wave also grants a supply bonus. Each wave increases the number of enemies, and later waves introduce larger zombies and resistance to certain attacks.
-- Players select a tower from the build panel and click a clear high-ground position, then click again to set its fixed firing direction. Towers target enemies within a 90-degree firing arc. Selecting a placed tower opens its firepower and range upgrade paths. Escape cancels placement.
+- Players can build during waves. Place a tower on clear high ground, then set a firing direction for sniper, shotgun, and rocket towers. Gun and lightning towers aim in all directions. Selecting a tower shows its two ability upgrades and firing coverage. Escape cancels placement.
 
 ## Towers
 
 - Gun tower provides reliable single-target fire.
-- Sniper tower attacks at long range with piercing shots.
+- Sniper tower attacks at long range and pierces a limited number of enemies.
 - Shotgun tower fires a directional spread of pellets at short range.
 - Rocket tower damages enemies in an area.
 - Lightning tower chains between enemies and briefly stuns them.
@@ -25,4 +25,4 @@ The game uses simple pixel-art characters and structures. Each zombie or turret 
 
 ## Current implementation
 
-`game.js` contains the canvas rendering, simulation, and controls. `style.css` styles the surrounding interface. Zombies follow the winding road around terrain, and towers use immediate attack effects. Further iteration can develop the flowing swarm behavior and balance.
+`game.js` contains the canvas rendering, simulation, and controls. `style.css` styles the surrounding interface. Zombies follow the winding road and push apart when they collide. Towers use immediate attack effects. Further iteration can develop the flowing swarm behavior and balance.
