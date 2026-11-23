@@ -27,22 +27,22 @@ const maps = {
       [[-30,292],[160,292],[335,265],[485,245],[643,265],[824,305],[1000,266],[1146,266]],
       [[-30,292],[160,292],[322,399],[480,475],[666,470],[865,384],[1000,266],[1146,266]]
     ],
-    landmarks: [[570,170,68,25],[515,362,108,35],[727,367,45,23],[935,80,78,31],[174,485,94,36]]
+    landmarks: [[570,170,68,25],[515,362,108,35],[691,385,45,23],[935,80,78,31],[174,485,94,36]]
   },
   town: {
     name: 'Bellwether Ruins', setting: 'Ruined town', size: 'Large', width: 1160, height: 820,
     briefing: 'Four streets leave the old market. Build in the vacant lots or guard the eastern junction.',
-    widths: [92, 82, 60, 60, 66, 70, 84],
+    widths: [86, 76, 68, 65, 76, 70, 70, 85, 82],
     paths: [
-      [[-30,405],[172,405],[285,245],[412,118],[648,118],[788,169],[982,405],[1126,405]],
-      [[-30,405],[172,405],[330,340],[438,301],[628,301],[783,288],[982,405],[1126,405]],
-      [[-30,405],[172,405],[320,470],[460,500],[620,500],[798,528],[982,405],[1126,405]],
-      [[-30,405],[172,405],[306,595],[426,678],[648,678],[795,627],[982,405],[1126,405]]
+      [[-30,510],[120,510],[228,349],[312,197],[502,155],[686,163],[805,243],[935,294],[1126,294]],
+      [[-30,510],[120,510],[228,349],[385,328],[523,380],[636,389],[733,292],[805,243],[935,294],[1126,294]],
+      [[-30,510],[120,510],[267,560],[396,555],[523,452],[636,389],[750,447],[875,427],[935,294],[1126,294]],
+      [[-30,510],[120,510],[267,560],[391,689],[607,673],[755,591],[875,427],[935,294],[1126,294]]
     ],
-    // Ruin bounds use center and half-extents. Vacant blocks remain buildable.
-    landmarks: [[105,151,46,31],[190,203,28,24],[512,207,48,26],[641,207,32,22],
-      [442,397,33,28],[585,402,47,28],[722,415,32,20],[479,591,44,22],
-      [641,591,39,24],[1008,172,52,33],[1017,614,51,29],[213,701,39,34],[722,753,43,19]]
+    landmarks: [[107,155,45,31],[207,182,33,25],[434,241,20,15],[621,235,41,28],
+      [336,430,53,28],[443,423,26,18],[553,545,49,34],[683,496,28,22],[813,345,39,26],
+      [962,163,53,33],[1032,560,54,33],[218,703,41,31],[716,751,47,25],[965,699,58,33]]
+
   },
   marsh: {
     name: 'Saltmarsh Delta', setting: 'Wetlands', size: 'Expansive', width: 1450, height: 750,
@@ -58,3 +58,79 @@ const maps = {
       [173,570,96,43],[1150,125,105,45],[1241,599,85,39],[945,349,60,25]]
   }
 };
+
+// Crossings are playable roads. Both endpoints occur on existing approaches.
+// A bend may contain extra points, but travel always progresses eastward.
+maps.forest.links=[
+  [54,[[290,296],[348,323],[397,385],[460,526]]]
+];
+maps.quarry.links=[
+  [50,[[315,180],[380,188],[432,220],[485,245]]],
+  [50,[[643,265],[714,310],[774,368],[865,384]]]
+];
+maps.town.links=[
+  [48,[[312,197],[370,224],[378,281],[385,328]]],
+  [48,[[502,155],[527,226],[558,285],[636,389]]],
+  [53,[[396,555],[426,602],[518,642],[607,673]]]
+];
+maps.marsh.links=[
+  [59,[[342,294],[394,315],[429,385],[463,459],[514,518]]],
+  [53,[[641,274],[696,332],[753,382],[826,426]]],
+  [57,[[826,426],[899,382],[951,321],[1025,280],[1112,285]]]
+];
+maps.forest.briefing='A creek-side trail crosses from the pine ridge into the hollow. The junction commands both valleys.';
+maps.quarry.briefing='Three haul roads change levels on two cutting ramps. Pits protect the shortcuts from one side.';
+maps.town.briefing='Market streets meet narrow alleys between bombed-out blocks. The central square covers several crossings.';
+maps.marsh.briefing='Raised trails cross the tidal basin in both directions. Build on the pools to cover the boardwalks.';
+
+// Give the later fronts distinct physical scales, including room between streets
+// for tower clusters. Ranges, unit sizes and road widths stay in world units.
+function expandZone(map,sx,sy){
+  const point=([x,y])=>[Math.round(x*sx),Math.round(y*sy)];
+  map.width=Math.round(map.width*sx);map.height=Math.round(map.height*sy);
+  map.paths=map.paths.map(path=>path.map(point));
+  map.links=map.links.map(([w,path])=>[w,path.map(point)]);
+  map.landmarks=map.landmarks.map(([x,y,rx,ry])=>[...point([x,y]),Math.round(rx*sx),Math.round(ry*sy)]);
+}
+expandZone(maps.town,1.22,1.10);
+expandZone(maps.marsh,1.23,1.13);
+maps.marsh.landmarks.push([519,144,128,51],[1044,797,142,33]);
+
+function prepareRoads(map){
+  const nodes=new Map(),edges=new Map();
+  function nodeAt([x,y]){
+    const key=x+','+y;
+    if(!nodes.has(key))nodes.set(key,{x,y,incoming:[],outgoing:[]});
+    return nodes.get(key);
+  }
+  function road(points,widths){
+    points.slice(1).forEach((p,i)=>{
+      const a=nodeAt(points[i]),b=nodeAt(p),key=[a.x,a.y,b.x,b.y].join(',');
+      if(edges.has(key))return;
+      const edge={a,b,width:widths[i]};
+      a.outgoing.push(edge);b.incoming.push(edge);edges.set(key,edge);
+    });
+  }
+  for(const path of map.paths)road(path,map.widths);
+  for(const [width,path] of map.links||[])road(path,Array(path.length-1).fill(width));
+  function tangent(node,edge){
+    if(node.incoming.length===1 && node.outgoing.length===1){
+      const prev=node.incoming[0].a,next=node.outgoing[0].b;
+      return (next.y-prev.y)/(next.x-prev.x);
+    }
+    return (edge.b.y-edge.a.y)/(edge.b.x-edge.a.x);
+  }
+  // Sample the same smooth centerline for navigation, drawing and placement.
+  for(const edge of edges.values()){
+    const {a,b}=edge,dx=b.x-a.x,dy=b.y-a.y,m0=tangent(a,edge)*dx,m1=tangent(b,edge)*dx;
+    const n=Math.max(2,Math.ceil(dx/30));edge.points=[{x:a.x,y:a.y}];
+    for(let j=1;j<=n;j++){
+      const t=j/n,u=1-t;
+      edge.points.push({x:a.x+t*dx,y:a.y+dy*t*t*(3-2*t)+m0*t*u*u-m1*t*t*u});
+    }
+  }
+  map.roads=[...edges.values()];
+  map.entry=nodeAt(map.paths[0][0]);
+  map.exit=nodeAt(map.paths[0].at(-1));
+}
+Object.values(maps).forEach(prepareRoads);

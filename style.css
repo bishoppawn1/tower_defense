@@ -48,3 +48,7 @@ aside{padding:15px;max-height:calc(100dvh - 102px);overflow:auto;scrollbar-width
 #mapDiagram{display:block;width:100px;height:54px;flex:none}
 .map-intel strong{font-size:12px;color:#f1d4a9}
 .map-intel p{font-size:12px;margin:3px 0 0;line-height:1.45}
+.tower-heading{display:flex;align-items:center;gap:6px;min-height:60px}
+.tower-heading img{width:64px;height:64px;object-fit:contain}
+.stat-tuning{margin-top:10px;border-top:1px solid var(--line);padding-top:8px}
+.stat-tuning summary{font-size:13px;color:#f4c9a8;cursor:pointer;font-weight:700}
