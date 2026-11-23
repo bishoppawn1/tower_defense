@@ -129,7 +129,7 @@ function zombieSprite(kind,tier){
 }
 const soldierSprite = FieldArt.infantry();
 function towerIcon(type) { return towerIcons[type]; }
-function ui(){document.querySelector('#money').textContent=money;document.querySelector('#health').textContent=health;document.querySelector('#wave').textContent=wave;document.querySelector('#cancel').hidden=!(building||aiming);document.querySelector('#placementLegend').hidden=!building;document.querySelector('#start').disabled=running||over;document.querySelector('#start').textContent=over?'Outpost lost':running?'Wave in progress':'Start wave →';shop.innerHTML='';Object.entries(types).forEach(([key,t])=>{let b=document.createElement('button');b.className='tower '+(building===key?'active':'');b.innerHTML=`<img class="icon" src="${towerIcon(key)}" alt=""><span><strong>${t.name}</strong></span><span class="cost">${t.cost} ⬡</span>`;b.onclick=()=>{upgradeDialog.hidden=true;if(aiming){money+=types[aiming.type].cost;towers=towers.filter(t=>t!==aiming);aiming=null}building=key;selected=null;ui()};shop.appendChild(b)});if(selected)showTowerDetails(selected);}
+function ui(){document.querySelector('#money').textContent=money;document.querySelector('#health').textContent=health;document.querySelector('#wave').textContent=wave;document.querySelector('#cancel').hidden=!(building||aiming);document.querySelector('#placementLegend').hidden=!building;speedButton.disabled=over;document.querySelector('#start').disabled=running||over;document.querySelector('#start').textContent=over?'Outpost lost':running?'Wave in progress':'Start wave →';shop.innerHTML='';Object.entries(types).forEach(([key,t])=>{let b=document.createElement('button');b.className='tower '+(building===key?'active':'');b.innerHTML=`<img class="icon" src="${towerIcon(key)}" alt=""><span><strong>${t.name}</strong></span><span class="cost">${t.cost} ⬡</span>`;b.onclick=()=>{upgradeDialog.hidden=true;if(aiming){money+=types[aiming.type].cost;towers=towers.filter(t=>t!==aiming);aiming=null}building=key;selected=null;ui()};shop.appendChild(b)});if(selected)showTowerDetails(selected);}
 function showTowerDetails(t){
   const barracks=t.type==='barracks';
   const tierRows=upgrades[t.type].map((track,i)=>`<div class="track"><small>${trackNames[t.type][i]}</small>${track.map(([text],n)=>{
@@ -403,7 +403,7 @@ function draw() {
     if(enemyReadout.textContent!==label)enemyReadout.textContent=label;
   }
   enemyReadout.hidden=!inspected;
-  for(const t of towers)if(t.plumeTime>0)FieldArt.flameJet(ctx,t,performance.now()*.001);
+  for(const t of towers)if(t.plumeTime>0)FieldArt.flameJet(ctx,t,simulationTime);
   for(const p of projectiles) FieldArt.round(ctx,p);
   for(const e of effects) FieldArt.effect(ctx,e);
   if(over){
@@ -413,7 +413,31 @@ function draw() {
 const landscape = document.querySelector('#landscape');
 FieldArt.landscape(landscape);
 window.addEventListener('resize', () => { if (!started) FieldArt.landscape(landscape); });
-let last=performance.now();function loop(now){let dt=Math.min(.05,(now-last)/1000);last=now;update(dt);draw();requestAnimationFrame(loop)}ui();requestAnimationFrame(loop);
+const speedButton=document.querySelector('#speed');
+const speeds=[1,2,4];
+let speedIndex=0,simulationTime=0,last=performance.now();
+speedButton.onclick=()=>{
+  speedIndex=(speedIndex+1)%speeds.length;
+  const speed=speeds[speedIndex],next=speeds[(speedIndex+1)%speeds.length];
+  speedButton.textContent='Speed '+speed+'×';
+  speedButton.title='Switch to '+next+'× speed';
+  speedButton.setAttribute('aria-label','Game speed '+speed+'×. '+speedButton.title+'.');
+  speedButton.classList.toggle('fast',speed>1);
+};
+function loop(now){
+  const dt=Math.max(0,Math.min(.05,(now-last)/1000));
+  last=now;
+  // Fast forward with normal-sized physics steps so bullets and bodies still collide.
+  if(started&&!over){
+    for(let step=0;step<speeds[speedIndex]&&!over;step++){
+      simulationTime+=dt;
+      update(dt);
+    }
+  }
+  draw();
+  requestAnimationFrame(loop);
+}
+ui();requestAnimationFrame(loop);
 
 const mapSelect=document.querySelector('#mapSelect');
 for(const [key,map] of Object.entries(maps))mapSelect.add(new Option(map.name,key));

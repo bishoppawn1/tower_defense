@@ -27,7 +27,11 @@ header{display:flex;align-items:center;gap:clamp(10px,2vw,34px);padding:8px clam
 .brand h1,h2{font-family:var(--display);margin:0;line-height:1.08;font-weight:800}
 .brand h1{font-size:clamp(20px,2.2vw,34px);letter-spacing:-.045em;text-transform:uppercase}.brand .beacon{width:18px;height:22px}
 .stats{display:flex;gap:clamp(12px,2vw,30px);margin-left:auto}.stats span,small{color:var(--muted)}.stats b{display:block;font-size:24px;color:var(--paper);letter-spacing:0;font-variant-numeric:tabular-nums}
-#start:disabled,.upgrade:disabled{opacity:.55;cursor:default}
+.wave-controls{display:flex;align-items:stretch;gap:6px}
+#speed{padding:0 12px;background:var(--panel);border:1px solid var(--line);font-variant-numeric:tabular-nums}
+#speed:hover:enabled{border-color:var(--orange)}
+#speed.fast{color:var(--orange)}
+#speed:disabled,#start:disabled,.upgrade:disabled{opacity:.55;cursor:default}
 main{display:grid;grid-template-columns:minmax(0,1fr) clamp(230px,19vw,292px);gap:10px;padding:10px;align-items:start}
 main>section{min-width:0;width:min(100%,calc((100dvh - 116px) * var(--map-ratio,1.54)));justify-self:center}
 .board{position:relative;overflow:hidden;border:1px solid #536260;border-radius:12px;background:#49675d}
