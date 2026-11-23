@@ -164,6 +164,7 @@ function prepareRoads(map){
       edge.points.push({x:a.x+t*dx,y,width:startSpan+(b.span-startSpan)*blend});
     }
   }
+  map.forks=[...nodes.values()].filter(node=>node.outgoing.length>1);
   map.roads=[...edges.values()];
   map.segments=map.roads.flatMap(road=>road.points.slice(1).map((b,i)=>{
     const a=road.points[i],dx=b.x-a.x,dy=b.y-a.y,length=Math.hypot(dx,dy);

@@ -27,7 +27,7 @@ const upgrades = {
   ],
   flame: [
     [['Pressure valve · 12% shorter reload',{reload:.88}],['Hot fuel · +15% impact damage',{power:1.15}],['Flashover · adds 3s of burn',{extraDuration:3}],['Inferno · doubles impact and adds 8 burn damage/s',{power:2,extraDot:8}],['Solar furnace · sixfold impact and +60 burn damage/s',{power:6,extraDot:60}]],
-    [['Wildfire · adds 1s of burn',{extraDuration:1}],['Long nozzle · +15% range',{reach:1.15}],['Fuel mix · adds 6 burn damage/s',{extraDot:6}],['Firestorm · flame passes through four zombies',{pierce:4}],['Fire corridor · triple range and flames pierce 18 targets',{reach:3,pierce:18}]]
+    [['Wildfire · adds 1s of burn',{extraDuration:1}],['Long nozzle · +15% range',{reach:1.15}],['Fuel mix · adds 6 burn damage/s',{extraDot:6}],['Firestorm · hits six zombies, retains 60% heat per hit',{pierce:6,heatRetention:.6}],['Fire corridor · triple range, 18 targets, retains 70% heat per hit',{reach:3,pierce:18,heatRetention:.7}]]
   ],
   frost: [
     [['Deep freeze · 3s slow',{slow:3}],['Cold snap · +15% damage',{power:1.15}],['Cryogenic · 7s slow and +35% damage',{slow:7,power:1.35}],['Absolute zero · freezes targets for 1s',{stun:1}],['Deep winter · freezes for 5s and deals fivefold damage',{stun:5,power:5}]],
@@ -67,7 +67,7 @@ const trackNames={
 const towerDefaults = {
   sniper:{pierce:2}, shotgun:{shots:7}, rocket:{blast:27,areaCap:4}, mortar:{blast:32,areaCap:5},
   lightning:{chains:4,jump:90,stun:.5}, pulse:{areaCap:5,push:35,stun:.25,stunChance:.08},
-  frost:{slow:2}, flame:{duration:2,dot:4}, venom:{duration:2,dot:4},
+  frost:{slow:2}, flame:{duration:2,dot:4,pierce:3,heatRetention:.5}, venom:{duration:2,dot:4},
   barracks:{damage:4,rifleRate:.8,cap:3,soldierHp:45,regen:0}
 };
 function createTower(type,x,y){

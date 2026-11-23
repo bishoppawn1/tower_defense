@@ -1,7 +1,7 @@
 const canvas=document.querySelector('#game'),ctx=canvas.getContext('2d');
 
 const types={gun:{name:'Gun tower',cost:50,range:140,rate:.45,damage:9,color:'#d5dcb3',desc:'Reliable single-target fire'},sniper:{name:'Sniper tower',cost:85,range:260,rate:1.65,damage:30,color:'#d6c89a',desc:'Long range · piercing shots'},shotgun:{name:'Shotgun tower',cost:75,range:100,rate:1.1,damage:9,color:'#e0b26d',desc:'Short range · directional spread'},rocket:{name:'Rocket tower',cost:110,range:180,rate:1.6,damage:30,color:'#d6845e',desc:'Blast damage falls off · up to four targets'},lightning:{name:'Lightning tower',cost:120,range:150,rate:1.35,damage:13,color:'#8bc8d0',desc:'Chains between enemies · stuns'}};
-Object.assign(types,{barracks:{name:'Barracks',cost:110,range:130,rate:3,damage:0,color:'#79a7ad',desc:'Deploys soldiers during waves'},flame:{name:'Flamethrower',cost:90,range:105,rate:.18,damage:4,color:'#f18d4c',desc:'Short-range stream · burns'},frost:{name:'Cryo tower',cost:95,range:140,rate:.8,damage:6,color:'#9adbe2',desc:'Chilling rounds slow zombies'},cannon:{name:'Autocannon',cost:125,range:180,rate:.65,damage:18,color:'#d8c17e',desc:'Heavy armor-piercing shells'},venom:{name:'Toxic sprayer',cost:100,range:130,rate:.7,damage:5,color:'#b2d75d',desc:'Poison damages over time'}});
+Object.assign(types,{barracks:{name:'Barracks',cost:110,range:130,rate:3,damage:0,color:'#79a7ad',desc:'Deploys soldiers during waves'},flame:{name:'Flamethrower',cost:90,range:105,rate:.18,damage:4,color:'#f18d4c',desc:'Burns through three targets · each hit loses heat'},frost:{name:'Cryo tower',cost:95,range:140,rate:.8,damage:6,color:'#9adbe2',desc:'Chilling rounds slow zombies'},cannon:{name:'Autocannon',cost:125,range:180,rate:.65,damage:18,color:'#d8c17e',desc:'Heavy armor-piercing shells'},venom:{name:'Toxic sprayer',cost:100,range:130,rate:.7,damage:5,color:'#b2d75d',desc:'Poison damages over time'}});
 Object.assign(types,{minigun:{name:'Minigun',cost:100,range:155,rate:.16,damage:4,color:'#d9b664',desc:'Rapid automatic fire'},mortar:{name:'Mortar',cost:130,range:230,rate:2.5,damage:22,color:'#d99f6c',desc:'Arcing shells · up to five targets per blast'},pulse:{name:'Pulse tower',cost:115,range:105,rate:1.8,damage:8,color:'#b5b1ef',desc:'Shoves up to five nearby zombies · 8% stun chance'}});
 const omnidirectional=['gun','lightning','barracks','frost','venom','minigun','mortar','pulse'];
 let started=false;
@@ -13,6 +13,7 @@ const BANK_CELL=2, BANK_MARGIN=96;
 let bankGrid,bankCols,bankRows;
 function buildRoutes(map) {
   activeMap=map;exitGate=map.exit;segments=map.segments;
+  for(const fork of map.forks)for(const exit of fork.outgoing)exit.entries=0;
   flowCols=Math.ceil(map.width/FLOW_CELL);flowRows=Math.ceil(map.height/FLOW_CELL);
   const mask=document.createElement('canvas');
   mask.width=bankCols=Math.ceil((map.width+2*BANK_MARGIN)/BANK_CELL);
@@ -83,6 +84,49 @@ function keepOnRoad(e,drift=0){
   }
  }
 }
+// Road samples are spaced evenly in x. Read the cross-section ahead instead
+// of sending a walker to a point that everyone must reach.
+function roadSection(edge,x){
+  const points=edge.points;
+  const t=Math.max(0,Math.min(1,(x-edge.a.x)/(edge.b.x-edge.a.x)))*(points.length-1);
+  const i=Math.min(points.length-2,Math.floor(t)),f=t-i;
+  const a=points[i],b=points[i+1];
+  return {y:a.y+(b.y-a.y)*f,width:a.width+(b.width-a.width)*f};
+}
+function forkDirection(e){
+  if(e.turn && e.x>e.turn.end)e.turn=null;
+  if(!e.turn){
+    for(const fork of activeMap.forks){
+      if(e.x<fork.x-250 || e.x>=fork.x)continue;
+      for(const approach of fork.incoming){
+        if(e.x<fork.x-Math.min(250,(fork.x-approach.a.x)*.58))continue;
+        const section=roadSection(approach,e.x);
+        if(Math.abs(e.y-section.y)>section.width/2)continue;
+        const side=Math.max(-.45,Math.min(.45,(e.y-section.y)/section.width));
+        // Prefer the nearer opening when equally many walkers have entered each.
+        let best=null,distance=Infinity;
+        for(const exit of fork.outgoing){
+          const d=Math.abs(exit.mouthOffset/fork.span-side);
+          if(!best||exit.entries<best.entries||(exit.entries===best.entries&&d<distance)){
+            best=exit;distance=d;
+          }
+        }
+        best.entries++;
+        e.turn={approach,exit:best,side:side*.5,end:fork.x+Math.min(130,(best.b.x-fork.x)*.4)};
+        break;
+      }
+      if(e.turn)break;
+    }
+  }
+  if(!e.turn)return null;
+  const {approach,exit,side}=e.turn,fork=exit.a;
+  const x=e.x+Math.max(18,e.speed*.48);
+  const before=x<fork.x,section=roadSection(before?approach:exit,x);
+  const offset=before?(exit.mouthOffset+side*exit.mouthSpan)/fork.span:side;
+  const dy=section.y+section.width*offset-e.y,dx=x-e.x;
+  const length=Math.hypot(dx,dy);
+  return {x:dx/length,y:dy/length};
+}
 function buildableGround(x,y){
   if(x<30 || x>activeMap.width-30 || y<30 || y>activeMap.height-30)return false;
   if(x>exitGate.x-60 && Math.abs(y-exitGate.y)<exitGate.span*.65+21)return false;
@@ -142,6 +186,7 @@ function showTowerDetails(t){
     `<button class="upgrade" data-tune="${key}">${labels[key]} +${Math.round(step*100)}% · Rank ${t.ranks[key]}<br>${tuningCost(t)} ⬡</button>`).join('');
   details.innerHTML=`<div class="tower-heading"><img src="${t.portrait||towerIcons[t.type]}" alt=""><div><small>Selected tower</small><h2>${types[t.type].name}</h2></div></div>
     <p>${labels.damage} ${Number(t.damage.toFixed(2))} · ${(1/(barracks?t.rifleRate:t.rate)).toFixed(2)}/s · ${labels.range} ${Math.round(t.range)}
+    ${t.type==='flame'?`<br>Up to ${t.pierce} targets · keeps ${Math.round(100*t.heatRetention)}% heat per hit`:''}
     ${t.areaCap?`<br>Up to ${t.areaCap} targets · damage fades toward the edge`:''}
     ${barracks?`<br>Soldiers ${soldiers.filter(a=>a.home===t&&a.hp>0).length} / ${t.cap}`:''}</p>
     <button class="sell" id="sellTower">Sell · ${Math.floor(t.spent*.7)} ⬡</button>
@@ -227,7 +272,11 @@ function fire(t,target){
     }
     contacts.sort((a,b)=>a.entry-b.entry);
     const hits=contacts.slice(0,t.pierce);
-    for(const {e} of hits)strike(e,t);
+    let heat=1;
+    for(const {e} of hits){
+      strike(e,{...t,damage:t.damage*heat,dot:t.dot*heat});
+      heat*=t.heatRetention;
+    }
     t.plumeLength=hits.length===t.pierce?Math.min(t.range,hits.at(-1).entry+9):t.range;
     t.plumeTime=t.rate+.045;
     return;
@@ -250,7 +299,7 @@ function fire(t,target){
   }
   effects.push({x:t.x+Math.cos(t.angle)*20,y:t.y+Math.sin(t.angle)*20,flash:true,time:.08,color:'#ffe7a0'});
   const distance=t.blast?Math.hypot(target.x-t.x,target.y-t.y):t.range;
-  const speed={sniper:700,mortar:190,rocket:260}[type]||480;
+  const speed={sniper:2100,cannon:1650,gun:1440,minigun:1440,shotgun:1320,mortar:400,rocket:600}[type]||960;
   for(let i=0;i<t.shots;i++){
     const spread=type==='shotgun'?(i/(t.shots-1)-.5)*.68:0;
     const angle=t.angle+spread;
@@ -281,11 +330,12 @@ function update(dt){if(!started||over)return;if(running)spawnPack(dt);let breach
  if(inMelee&&e.stun<=0){e.attack=(e.attack||0)-dt;if(e.attack<=0){defender.hp-=e.body.melee;e.attack=.7}}
  const speed=e.speed*(e.slow>0?.55:1);
  if(e.stun>0||inMelee){e.vx*=Math.exp(-5*dt);e.vy*=Math.exp(-5*dt);}else{
-  // A single eastward body force acts on the entire board. Road geometry
-  // enters the movement calculation only when a body touches a bank.
+  // Between forks zombies coast downhill, sliding and spreading on contact.
   let ax=1,ay=0;
   if(defender){ax=(defender.x-e.x)/closest;ay=(defender.y-e.y)/closest;}
-  const acceleration=speed*(defender?2.7:.62);
+  const turn=defender?null:forkDirection(e);
+  if(turn){ax=turn.x;ay=turn.y;}
+  const acceleration=speed*(defender||turn?2.7:.62);
   const drag=1+dt*acceleration*Math.hypot(e.vx,e.vy)/(speed*speed);
   e.vx=(e.vx+dt*acceleration*ax)/drag;
   e.vy=(e.vy+dt*acceleration*ay)/drag;
@@ -329,7 +379,7 @@ for(let pass=0;pass<2;pass++){
   buckets.get(key).push(e);
  }
 }
-for(let t of towers){if(t===aiming)continue;t.cool-=dt;if(t.recoil)t.recoil=Math.max(0,t.recoil-24*dt);if(t.plumeTime>0)t.plumeTime-=dt;if(t.type==='barracks'){if(running&&t.cool<=0&&soldiers.filter(a=>a.home===t).length<t.cap){let rally=nearestRoad(t.x,t.y),dx=t.x-rally.x,dy=t.y-rally.y,d=Math.hypot(dx,dy)||1;soldiers.push({home:t,x:rally.x+dx/d*12,y:rally.y+dy/d*12,hp:t.soldierHp,maxHp:t.soldierHp,cool:0,rally});t.cool=t.rate;if(selected===t)ui()}continue}let target=enemies.filter(e=>{let angle=Math.atan2(e.y-t.y,e.x-t.x),difference=Math.atan2(Math.sin(angle-t.facing),Math.cos(angle-t.facing));return e.hp>0&&Math.hypot(e.x-t.x,e.y-t.y)<t.range&&(omnidirectional.includes(t.type)||Math.abs(difference)<=Math.PI/4)}).sort((a,b)=>b.x-a.x)[0];if(target&&t.cool<=0){fire(t,target);t.cool=t.rate}}for(let a of soldiers){a.cool-=dt;if(a.hp>0&&a.home.regen)a.hp=Math.min(a.maxHp,a.hp+a.home.regen*dt);let target=enemies.filter(e=>e.hp>0&&Math.hypot(e.x-a.home.x,e.y-a.home.y)<a.home.range+60).sort((x,y)=>Math.hypot(x.x-a.x,x.y-a.y)-Math.hypot(y.x-a.x,y.y-a.y))[0];if(target){let dx=target.x-a.x,dy=target.y-a.y,d=Math.hypot(dx,dy);a.angle=Math.atan2(dy,dx);if(d>85){a.x+=dx/d*45*dt;a.y+=dy/d*45*dt}else if(a.cool<=0){projectiles.push({x:a.x,y:a.y,dx:dx/d,dy:dy/d,speed:400,remaining:100,damage:a.home.damage,type:'soldier',pierce:1,hit:[]});a.cool=a.home.rifleRate}}else{let dx=a.rally.x-a.x,dy=a.rally.y-a.y,d=Math.hypot(dx,dy);if(d>5){a.x+=dx/d*40*dt;a.y+=dy/d*40*dt}}}let previousSoldierCount=soldiers.length;soldiers=soldiers.filter(a=>a.hp>0);if(selected&&selected.type==='barracks'&&soldiers.length!==previousSoldierCount)ui();for(let i=0;i<soldiers.length;i++)for(let j=i+1;j<soldiers.length;j++){let a=soldiers[i],b=soldiers[j],dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy);if(d<16){if(d<.01){dx=1;dy=0;d=1}let shift=(16-d)/2;a.x-=dx/d*shift;a.y-=dy/d*shift;b.x+=dx/d*shift;b.y+=dy/d*shift}}moveProjectiles(dt);let dead=enemies.filter(e=>e.hp<=0&&!e.escaped);if(dead.length){money+=dead.reduce((sum,e)=>sum+e.body.bounty,0);ui()}enemies=enemies.filter(e=>e.hp>0);effects.forEach(e=>e.time-=dt);effects=effects.filter(e=>e.time>0);if(running&&!waveQueue.length&&!enemies.length){running=false;soldiers=[];money+=30+wave*5;status.textContent='Wave cleared · supplies delivered';ui()}}
+for(let t of towers){if(t===aiming)continue;t.cool-=dt;if(t.recoil)t.recoil=Math.max(0,t.recoil-24*dt);if(t.plumeTime>0)t.plumeTime-=dt;if(t.type==='barracks'){if(running&&t.cool<=0&&soldiers.filter(a=>a.home===t).length<t.cap){let rally=nearestRoad(t.x,t.y),dx=t.x-rally.x,dy=t.y-rally.y,d=Math.hypot(dx,dy)||1;soldiers.push({home:t,x:rally.x+dx/d*12,y:rally.y+dy/d*12,hp:t.soldierHp,maxHp:t.soldierHp,cool:0,rally});t.cool=t.rate;if(selected===t)ui()}continue}let target=enemies.filter(e=>{let angle=Math.atan2(e.y-t.y,e.x-t.x),difference=Math.atan2(Math.sin(angle-t.facing),Math.cos(angle-t.facing));return e.hp>0&&Math.hypot(e.x-t.x,e.y-t.y)<t.range&&(omnidirectional.includes(t.type)||Math.abs(difference)<=Math.PI/4)}).sort((a,b)=>b.x-a.x)[0];if(target&&t.cool<=0){fire(t,target);t.cool=t.rate}}for(let a of soldiers){a.cool-=dt;if(a.hp>0&&a.home.regen)a.hp=Math.min(a.maxHp,a.hp+a.home.regen*dt);let target=enemies.filter(e=>e.hp>0&&Math.hypot(e.x-a.home.x,e.y-a.home.y)<a.home.range+60).sort((x,y)=>Math.hypot(x.x-a.x,x.y-a.y)-Math.hypot(y.x-a.x,y.y-a.y))[0];if(target){let dx=target.x-a.x,dy=target.y-a.y,d=Math.hypot(dx,dy);a.angle=Math.atan2(dy,dx);if(d>85){a.x+=dx/d*45*dt;a.y+=dy/d*45*dt}else if(a.cool<=0){projectiles.push({x:a.x,y:a.y,dx:dx/d,dy:dy/d,speed:1200,remaining:100,damage:a.home.damage,type:'soldier',pierce:1,hit:[]});a.cool=a.home.rifleRate}}else{let dx=a.rally.x-a.x,dy=a.rally.y-a.y,d=Math.hypot(dx,dy);if(d>5){a.x+=dx/d*40*dt;a.y+=dy/d*40*dt}}}let previousSoldierCount=soldiers.length;soldiers=soldiers.filter(a=>a.hp>0);if(selected&&selected.type==='barracks'&&soldiers.length!==previousSoldierCount)ui();for(let i=0;i<soldiers.length;i++)for(let j=i+1;j<soldiers.length;j++){let a=soldiers[i],b=soldiers[j],dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy);if(d<16){if(d<.01){dx=1;dy=0;d=1}let shift=(16-d)/2;a.x-=dx/d*shift;a.y-=dy/d*shift;b.x+=dx/d*shift;b.y+=dy/d*shift}}moveProjectiles(dt);let dead=enemies.filter(e=>e.hp<=0&&!e.escaped);if(dead.length){money+=dead.reduce((sum,e)=>sum+e.body.bounty,0);ui()}enemies=enemies.filter(e=>e.hp>0);effects.forEach(e=>e.time-=dt);effects=effects.filter(e=>e.time>0);if(running&&!waveQueue.length&&!enemies.length){running=false;soldiers=[];money+=30+wave*5;status.textContent='Wave cleared · supplies delivered';ui()}}
 function makeMap() {
   const seed = 372 + Object.values(maps).indexOf(activeMap) * 101;
   return FieldArt.terrain(activeMap, activeMap.roads, segments, pathDistance, seed, waterShape, canvas.width/activeMap.width);
