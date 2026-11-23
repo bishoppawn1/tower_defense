@@ -194,7 +194,10 @@ const FieldArt = (() => {
       water.bezierCurveTo(252,315,586,305,568,409);water.bezierCurveTo(550,525,770,520,715,700);
       water.lineTo(746,700);water.bezierCurveTo(803,522,590,510,599,408);
       water.bezierCurveTo(612,287,283,304,348,200);water.bezierCurveTo(410,78,124,83,109,-10);
-      water.closePath();return water;
+      water.closePath();
+      const creek=new Path2D();
+      creek.addPath(water,new DOMMatrix().scale(map.width/980,map.height/680));
+      return creek;
     }
     if(map.setting!=='Wetlands')return null;
     // A deep tidal channel with a western creek and an eastern backwater.
@@ -230,8 +233,8 @@ const FieldArt = (() => {
     }
     return road;
   }
-  function terrain(map, roads, segments, distance, seed, water) {
-    const {width,height,setting}=map, {canvas,g}=surface(width,height,2),random=seeded(seed);
+  function terrain(map, roads, segments, distance, seed, water, scale) {
+    const {width,height,setting}=map, {canvas,g}=surface(width,height,scale),random=seeded(seed);
     const palette=terrainColors[setting],exit=map.exit;
     const urban=setting==='Ruined town',quarry=setting==='Quarry',marsh=setting==='Wetlands';
     g.fillStyle=gradient(g,0,0,width,height,...palette.ground);g.fillRect(0,0,width,height);
@@ -318,7 +321,7 @@ const FieldArt = (() => {
       const cx=random()*width,cy=random()*height;
       for(let j=0;j<2+random()*5;j++){
         const x=cx+(random()-.5)*75,y=cy+(random()-.5)*44,h=11+random()*26;
-        if((!water||!g.isPointInPath(water,x*2,y*2)) && distance(x,y-h*.5)>h*.65 && (x<exit.x-56 || Math.abs(y-exit.y)>90))groves.push({x,y,h});
+        if((!water||!g.isPointInPath(water,x*scale,y*scale)) && distance(x,y-h*.5)>h*.65 && (x<exit.x-56 || Math.abs(y-exit.y)>90))groves.push({x,y,h});
       }
     }
     groves.sort((a,b)=>a.y-b.y);
@@ -367,7 +370,7 @@ const FieldArt = (() => {
       }
     }
     // Fortified gate at the road exit with side towers and amber landing lights.
-    g.save();g.translate(exit.x,exit.y);
+    g.save();g.translate(exit.x,exit.y);g.scale(1,exit.span/84);
     box(g,-36,-48,80,103,10,'#263c3752');
     box(g,-35,-49,80,98,10,'#3b5151');
     box(g,-29,-43,74,86,8,'#8c9d8e');

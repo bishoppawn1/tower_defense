@@ -89,12 +89,21 @@ function expandZone(map,sx,sy){
   const point=([x,y])=>[Math.round(x*sx),Math.round(y*sy)];
   map.width=Math.round(map.width*sx);map.height=Math.round(map.height*sy);
   map.paths=map.paths.map(path=>path.map(point));
-  map.links=map.links.map(([w,path])=>[w,path.map(point)]);
+  map.links=(map.links||[]).map(([w,path])=>[w,path.map(point)]);
   map.landmarks=map.landmarks.map(([x,y,rx,ry])=>[...point([x,y]),Math.round(rx*sx),Math.round(ry*sy)]);
 }
 expandZone(maps.town,1.22,1.10);
 expandZone(maps.marsh,1.23,1.13);
 maps.marsh.landmarks.push([519,144,128,51],[1044,797,142,33]);
+
+// Expand the battlefield and its roads together. Bodies, ranges, and movement
+// speeds stay in world units, so a wider opening really carries more zombies.
+const fieldScale=1.55;
+for(const map of Object.values(maps)){
+  expandZone(map,fieldScale,fieldScale);
+  map.widths=map.widths.map(w=>Math.round(w*fieldScale));
+  map.links=map.links.map(([width,path])=>[Math.round(width*fieldScale),path]);
+}
 
 function prepareRoads(map){
   const nodes=new Map(),edges=new Map();
@@ -132,7 +141,7 @@ function prepareRoads(map){
     if(node.outgoing.length<2)continue;
     const exits=node.outgoing.slice().sort((l,r)=>(l.b.y-node.y)/(l.b.x-node.x)-(r.b.y-node.y)/(r.b.x-node.x));
     // Each outlet must pass even a brute across its narrowest diagonal.
-    const minSpans=exits.map(({a,b})=>34*Math.hypot(1,(b.y-a.y)/(b.x-a.x)));
+    const minSpans=exits.map(({a,b})=>58*Math.hypot(1,(b.y-a.y)/(b.x-a.x)));
     let reserved=minSpans.reduce((sum,w)=>sum+w,0);
     node.span=Math.max(node.span,reserved);
     const offset=-.43*grade/Math.hypot(.4,grade);

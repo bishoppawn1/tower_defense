@@ -35,7 +35,7 @@ function tierRoster(number,count){
   return shuffle(ranks);
 }
 function waveRoster(number){
-  const count=number<=3?[14,24,36][number-1]:48+(number-4)*12;
+  const count=number<=3?[18,34,56][number-1]:80+(number-4)*18;
   const brutes=number<4?0:Math.max(1,Math.floor(count/50));
   const runners=number<3?0:Math.floor(count*.12);
   const variants=['armor','shock','fire','cold','toxic','blast'].filter((_,i)=>number>=3+i*2);
@@ -84,7 +84,7 @@ function spawnPack(dt){
     const y=freeSpawnY(x,center-width/2,center+width/2,body.radius);
     if(y===null)break;
     const hp=Math.round(enemyTiers[tier-1].hp*body.health);
-    enemies.push({x,y,vx:body.speed*.25,vy:0,bias:Math.random()<.5?-1:1,
+    enemies.push({x,y,vx:body.speed*.8,vy:0,bias:Math.random()<.5?-1:1,
       r:body.radius,hp,max:hp,kind,tier,speed:body.speed,stun:0,pulseRecovery:0,body});
     announce(kind);
     if(tier>1){
@@ -93,5 +93,5 @@ function spawnPack(dt){
     }
     waveQueue.pop();made++;
   }
-  spawn=made?made*(wave===1?.68:wave<5?.33:.153):.08;
+  spawn=made?made*(wave===1?.30:wave<5?.14:.065):.04;
 }

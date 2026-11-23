@@ -14,7 +14,7 @@ const upgrades = {
     [['Choke · +15% range',{reach:1.15}],['Heavy pellets · +15% damage',{power:1.15}],['Shrapnel · each pellet hits three targets',{pierce:3}],['Stopping power · +50% damage and a 2s slow',{power:1.5,slow:2}],['Breach cannon · pellets pierce 12 and stun for 2s',{pierce:12,stun:2}]]
   ],
   rocket: [
-    [['Blast charge · blast radius 39',{blast:39}],['Heavy warhead · +15% damage',{power:1.15}],['Fragmentation · radius 47 and +25% damage',{blast:47,power:1.25}],['Siege warhead · double impact damage',{power:2}],['Caldera · radius 105 and fivefold impact damage',{blast:105,power:5}]],
+    [['Blast charge · blast radius 32',{blast:32}],['Heavy warhead · +15% damage',{power:1.15}],['Fragmentation · radius 38, six targets and +25% damage',{blast:38,areaCap:6,power:1.25}],['Siege warhead · double impact damage',{power:2}],['Caldera · radius 65, ten targets and fivefold impact damage',{blast:65,areaCap:10,power:5}]],
     [['Concussion · slows for 0.8s',{slow:.8}],['Accelerator · 15% shorter reload',{reload:.85}],['Incendiary · burns for 6 damage/s for 4s',{dot:6,duration:4}],['Firestorm · burns for 12 damage/s for 6s',{dot:12,duration:6}],['Sunburn · blast burns for 100 damage/s for 12s',{dot:100,duration:12}]]
   ],
   lightning: [
@@ -46,12 +46,12 @@ const upgrades = {
     [['Tracer · hits two targets',{pierce:2}],['Long barrel · +15% range',{reach:1.15}],['Heavy rounds · +55% damage',{power:1.55}],['Depleted cores · bypass armor and hit five targets',{ignoreArmor:true,pierce:5}],['Needle storm · rounds pierce 20 and deal quadruple damage',{pierce:20,power:4}]]
   ],
   mortar: [
-    [['Wider shells · blast radius 40',{blast:40}],['Heavy shells · +20% damage',{power:1.2}],['Barrage · 35% shorter reload',{reload:.65}],['Siege shells · radius 60 and +70% damage',{blast:60,power:1.7}],['Earthbreaker · radius 120 and fivefold shell damage',{blast:120,power:5}]],
+    [['Wider shells · blast radius 37',{blast:37}],['Heavy shells · +20% damage',{power:1.2}],['Barrage · 35% shorter reload',{reload:.65}],['Siege shells · radius 46, eight targets and +70% damage',{blast:46,areaCap:8,power:1.7}],['Earthbreaker · radius 76, twelve targets and fivefold shell damage',{blast:76,areaCap:12,power:5}]],
     [['Long tube · +15% range',{reach:1.15}],['Concussion · slows for 1.5s',{slow:1.5}],['Pressure wave · pushes blast survivors',{push:105}],['Flashbang · stuns the blast zone for 2s',{stun:2}],['Aftershock · 5s area stun and triple fire rate',{stun:5,reload:1/3}]]
   ],
   pulse: [
     [['Amplifier · +15% damage',{power:1.15}],['Quick charge · 15% shorter recharge',{reload:.85}],['Overload · +60% damage',{power:1.6}],['Cascade · halves recharge time',{reload:.5}],['Resonance engine · fivefold damage and double pulse rate',{power:5,reload:.5}]],
-    [['Broad field · +15% range',{reach:1.15}],['Disruptor · 10% chance to stun for 0.45s',{stunChance:.10,stun:.45}],['Repulsor · stronger shove',{push:48}],['Static field · 12% stun for 0.65s and a brief slow',{stunChance:.12,stun:.65,slow:.75}],['Exclusion field · double radius, stronger shove, 15% stun for 1s',{reach:2,push:65,stunChance:.15,stun:1}]]
+    [['Broad field · +15% range, hits six targets',{reach:1.15,areaCap:6}],['Disruptor · 10% chance to stun for 0.45s',{stunChance:.10,stun:.45}],['Repulsor · stronger shove',{push:48}],['Static field · 12% stun for 0.65s and a brief slow',{stunChance:.12,stun:.65,slow:.75}],['Exclusion field · double radius, ten targets, stronger shove, 15% stun for 1s',{reach:2,areaCap:10,push:65,stunChance:.15,stun:1}]]
   ]
 };
 
@@ -65,8 +65,8 @@ const trackNames={
   pulse:['Resonator','Repulsor field']
 };
 const towerDefaults = {
-  sniper:{pierce:2}, shotgun:{shots:7}, rocket:{blast:35}, mortar:{blast:35},
-  lightning:{chains:4,jump:90,stun:.5}, pulse:{push:35,stun:.25,stunChance:.08},
+  sniper:{pierce:2}, shotgun:{shots:7}, rocket:{blast:27,areaCap:4}, mortar:{blast:32,areaCap:5},
+  lightning:{chains:4,jump:90,stun:.5}, pulse:{areaCap:5,push:35,stun:.25,stunChance:.08},
   frost:{slow:2}, flame:{duration:2,dot:4}, venom:{duration:2,dot:4},
   barracks:{damage:4,rifleRate:.8,cap:3,soldierHp:45,regen:0}
 };
