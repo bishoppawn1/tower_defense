@@ -1,8 +1,8 @@
 // Walkers and their resistant variants all share one unmodified movement speed.
-const walkerBody={speed:46,radius:9,health:1,melee:8,breach:1,bounty:4,stride:7};
+const walkerBody={speed:46,radius:9,health:1,melee:8,breach:1,bounty:4};
 const enemyBodies={
-  runner:{speed:88,radius:8,health:.72,melee:6,breach:1,bounty:5,stride:12},
-  brute:{speed:30,radius:16,health:9,melee:24,breach:5,bounty:24,stride:4.5}
+  runner:{speed:88,radius:8,health:.72,melee:6,breach:1,bounty:5},
+  brute:{speed:30,radius:16,health:9,melee:24,breach:5,bounty:24}
 };
 // Health belongs to the tier and body. Wave number only selects a roster.
 const enemyTiers=[
@@ -38,7 +38,7 @@ function waveRoster(number){
   const count=number<=3?[14,24,36][number-1]:48+(number-4)*12;
   const brutes=number<4?0:Math.max(1,Math.floor(count/50));
   const runners=number<3?0:Math.floor(count*.12);
-  const variants=['armor','shock','fire','cold','toxic'].filter((_,i)=>number>=3+i*2);
+  const variants=['armor','shock','fire','cold','toxic','blast'].filter((_,i)=>number>=3+i*2);
   const special=variants.length?Math.floor(count*.21):0;
   const mobile=Array(count-brutes-runners-special).fill('normal').concat(Array(runners).fill('runner'));
   for(let i=0;i<special;i++)mobile.push(variants[i%variants.length]);
@@ -48,22 +48,44 @@ function waveRoster(number){
   const tiers=tierRoster(number,count);
   return mobile.map((kind,i)=>({kind,tier:tiers[i]}));
 }
+// Subtract the cross-sections of occupied collision circles from the entrance.
+function freeSpawnY(x,top,bottom,radius){
+  let gaps=[[top+radius+2,bottom-radius-2]];
+  for(const e of enemies){
+    if(e.hp<=0)continue;
+    const dx=x-e.x,clearance=radius+e.r+1;
+    if(Math.abs(dx)>=clearance)continue;
+    const side=Math.sqrt(clearance*clearance-dx*dx);
+    const lo=e.y-side,hi=e.y+side;
+    gaps=gaps.flatMap(([a,b])=>[[a,Math.min(b,lo)],[Math.max(a,hi),b]].filter(([l,r])=>r>l));
+    if(!gaps.length)return null;
+  }
+  const open=gaps.reduce((sum,[a,b])=>sum+b-a,0);
+  if(open<=0)return null;
+  let pick=Math.random()*open;
+  for(const [a,b] of gaps){
+    if(pick<b-a)return a+pick;
+    pick-=b-a;
+  }
+  return null;
+}
 function spawnPack(dt){
   if(!waveQueue.length)return;
   spawn-=dt;
   if(spawn>0)return;
-  const entry=activeMap.entry;
-  const lanes=[entry.y-28,entry.y,entry.y+28];
-  const pack=wave===1?1:wave<5?2:3;
+  const entry=activeMap.entry,x=entry.x+20;
+  const points=entry.outgoing[0].points;
+  const i=points.findIndex(p=>p.x>=x),a=points[i-1],b=points[i];
+  const t=(x-a.x)/(b.x-a.x);
+  const center=a.y+(b.y-a.y)*t,width=a.width+(b.width-a.width)*t;
   let made=0;
-  while(made<pack && waveQueue.length){
-    const {kind,tier}=waveQueue[waveQueue.length-1],body=enemyBodies[kind]||walkerBody;
-    const open=lanes.filter(y=>enemies.every(e=>Math.hypot(e.x+20,e.y-y)>=e.r+body.radius+1));
-    if(!open.length)break;
-    const y=open[Math.floor(Math.random()*open.length)];
+  while(waveQueue.length){
+    const {kind,tier}=waveQueue.at(-1),body=enemyBodies[kind]||walkerBody;
+    const y=freeSpawnY(x,center-width/2,center+width/2,body.radius);
+    if(y===null)break;
     const hp=Math.round(enemyTiers[tier-1].hp*body.health);
-    enemies.push({x:-20,y,vx:body.speed,vy:0,bias:Math.random()<.5?-1:1,
-      r:body.radius,hp,max:hp,kind,tier,speed:body.speed,stun:0,phase:Math.random()*6,body});
+    enemies.push({x,y,vx:body.speed*.25,vy:0,bias:Math.random()<.5?-1:1,
+      r:body.radius,hp,max:hp,kind,tier,speed:body.speed,stun:0,pulseRecovery:0,body});
     announce(kind);
     if(tier>1){
       const rank=enemyTiers[tier-1];
@@ -71,5 +93,5 @@ function spawnPack(dt){
     }
     waveQueue.pop();made++;
   }
-  spawn=made===pack?(wave===1?.68:wave<5?.66:.46):.08;
+  spawn=made?made*(wave===1?.68:wave<5?.33:.153):.08;
 }

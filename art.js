@@ -222,6 +222,14 @@ const FieldArt = (() => {
     }
     return water;
   }
+  function roadOutline(segments){
+    const road=new Path2D();
+    for(const {a,b,r0,r1} of segments){
+      road.moveTo(a.x,a.y-r0);road.lineTo(b.x,b.y-r1);
+      road.lineTo(b.x,b.y+r1);road.lineTo(a.x,a.y+r0);road.closePath();
+    }
+    return road;
+  }
   function terrain(map, roads, segments, distance, seed, water) {
     const {width,height,setting}=map, {canvas,g}=surface(width,height,2),random=seeded(seed);
     const palette=terrainColors[setting],exit=map.exit;
@@ -267,29 +275,10 @@ const FieldArt = (() => {
       }
       g.restore();
     }
-    // Uneven verges stay within a few world units of the collision boundary.
-    const shoulders=segments.map(({a,b,width})=>{
-      const length=Math.hypot(b.x-a.x,b.y-a.y),nx=(a.y-b.y)/length,ny=(b.x-a.x)/length;
-      const edges=[[],[]];
-      for(let side=0;side<2;side++){
-        const sign=side?1:-1, steps=Math.ceil(length/6);
-        for(let i=0;i<=steps;i++){
-          const t=i/steps,x=a.x+(b.x-a.x)*t,y=a.y+(b.y-a.y)*t;
-          const drift=1.5*Math.sin(x*.066+y*.028)+.7*Math.cos(y*.15-x*.13);
-          const w=sign*(width*.5+drift);
-          edges[side].push([x+nx*w,y+ny*w]);
-        }
-      }
-      return [...edges[0],...edges[1].reverse()];
-    });
-    const dust=gradient(g,0,0,width,height,...palette.road);
-    for(const [extra,color] of [[12,palette.edge],[6,urban?'#c2beb0':palette.edge],[0,dust]]){
-      segments.forEach(({a,b,width},i)=>{
-        for(const point of [a,b])oval(g,point.x,point.y,(width+extra)/2,(width+extra)/2,color);
-        shape(g,shoulders[i],color);
-        if(extra){g.lineWidth=extra;g.strokeStyle=color;g.stroke();}
-      });
-    }
+    const roadbed=roadOutline(segments);
+    g.lineWidth=10;g.strokeStyle=palette.edge;g.stroke(roadbed);
+    g.lineWidth=4;g.strokeStyle=urban?'#c2beb0':palette.edge;g.stroke(roadbed);
+    g.fillStyle=gradient(g,0,0,width,height,...palette.road);g.fill(roadbed);
     // Faint wheel ruts carry the eye through forks without marking enemy lanes.
     for(const road of roads){
       for(const offset of urban?[0]:[-11,11]){
@@ -304,15 +293,14 @@ const FieldArt = (() => {
       }
     }
     if(water){
-      // Boardwalks follow the actual road anywhere it passes over tidal water.
-      g.save();g.clip(water);
-      for(const road of roads){
-        const pts=road.points.map(p=>[p.x,p.y]);line(g,pts,'#504e41',road.width+4);
-      }
-      for(const road of roads){
-        const pts=road.points.map(p=>[p.x,p.y]);line(g,pts,'#9f9175',road.width);
-        g.lineCap='butt';g.setLineDash([1.5,5]);line(g,pts,'#6e6856',road.width-3);g.setLineDash([]);g.lineCap='round';
-        line(g,pts,'#b5a68a70',road.width*.55);
+      g.save();g.clip(water);g.clip(roadbed);
+      g.fillStyle='#9f9175';g.fillRect(0,0,width,height);
+      for(const {a,b,ux,uy,length,r0,r1} of segments){
+        const steps=Math.max(1,Math.round(length/6));
+        for(let i=0;i<steps;i++){
+          const t=(i+.5)/steps,x=a.x+(b.x-a.x)*t,y=a.y+(b.y-a.y)*t,r=r0+(r1-r0)*t;
+          line(g,[[x-uy*r,y+ux*r],[x+uy*r,y-ux*r]],'#756f5d',1.3);
+        }
       }
       g.restore();
     }
@@ -362,17 +350,17 @@ const FieldArt = (() => {
     if(urban){
       // Crosswalks and abandoned cars mark the inhabited street grid.
       const junctions=new Set();
-      for(const {a,b,points,width:w} of roads){
+      for(const {a,b,points} of roads){
         if(a.outgoing.length>1){
           const dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy);
           g.save();g.translate(a.x+dx/d*56,a.y+dy/d*56);g.rotate(Math.atan2(dy,dx));
-          for(let y=-w*.35;y<w*.36;y+=7)box(g,-3,y,6,3,0,'#d7d4ad7a');
+          for(let y=-points[0].width*.35;y<points[0].width*.36;y+=7)box(g,-3,y,6,3,0,'#d7d4ad7a');
           g.restore();
         }
         const p=points[Math.floor(points.length/2)];
         if(b.x-a.x<80||junctions.has(p.x))continue;
         junctions.add(p.x);
-        const side=random()<.5?-1:1;g.save();g.translate(p.x,p.y+side*w*.36);
+        const side=random()<.5?-1:1;g.save();g.translate(p.x,p.y+side*p.width*.36);
         g.rotate(Math.atan2(b.y-a.y,b.x-a.x)+random()*.25);
         box(g,-9,-4,19,8,2.6,'#384644');box(g,-8,-4,17,6,2,['#9f7864','#8d998d','#a69f80'][Math.floor(random()*3)]);
         box(g,-4,-3,8,4.7,1,'#526565');box(g,-2,-3,4,4.7,1,'#869187');g.restore();
@@ -561,7 +549,7 @@ const FieldArt = (() => {
     }
     return canvas;
   }
-  function zombie(kind,skin,step,tier=1){
+  function zombie(kind,skin,tier=1){
     // Trace the early walker's wide brow, torn shoulders and two forward hands
     // in continuous curves. Each arm has its own sleeve, wrist and finger line.
     const {canvas,g}=surface(44,44,6);g.translate(22,22);
@@ -594,7 +582,7 @@ const FieldArt = (() => {
     if(kind==='runner'){
       piece('M-9 -5 L-6 -7 -2 -5 -3 -2 -4 4 -7 6 -9 4 -7 0 Z','#aa5140');
       line(g,[[-7,-5],[-5,-3],[-6,3]],'#f4d9a7',1.35);
-      for(const side of [-1,1])line(g,[[-4,side*4],[-8-step*side,side*6],[-10-step*side,side*4]],'#425047',2);
+      for(const side of [-1,1])line(g,[[-4,side*4],[-8-side,side*6],[-10-side,side*4]],'#425047',2);
     }
     if(kind==='brute'){
       for(const side of [-1,1]){
@@ -607,6 +595,13 @@ const FieldArt = (() => {
     if(kind==='armor'){
       piece('M-3.8 -3.3 Q-2 -6.8 1.4 -6.2 L3.5 -5.6 3.3 -3.7 2.7 -1.9 2.9 1.9 3.6 4.1 2.2 5.5 Q-1 6.1 -3.6 3.2 Z','#6e7a71');
       line(g,[[-2.7,-3],[0,-4.9],[2.3,-4.6]],'#a5af96',.9);
+    }
+    if(kind==='blast'){
+      // A padded bomb-suit collar and gold visor stay visible between tier plates.
+      piece('M-8 -5 Q-9 -9 -4 -9 L0 -7 -2 -4 -2 4 0 7 -4 9 Q-9 9 -8 5 Z','#386c71');
+      piece('M-4 -4 Q-2 -7 3 -6 L5 -4 5 4 3 6 Q-2 7 -4 4 Z','#477d7d');
+      piece('M2 -4 L5 -3 6 -2 6 2 5 3 2 4 Z','#efb957');
+      line(g,[[-6,-5],[-4,-4],[-4,4],[-6,5]],'#9ac0b6',1.2);
     }
     if(tier===1)return canvas;
     // Keep the face, hands and central jacket exposed. Paired growths sit
@@ -700,5 +695,5 @@ const FieldArt = (() => {
     }
     g.restore();
   }
-  return {landscape,terrain,waterways,foundation,tower,zombie,infantry,flameJet,round,effect};
+  return {landscape,roadOutline,terrain,waterways,foundation,tower,zombie,infantry,flameJet,round,effect};
 })();

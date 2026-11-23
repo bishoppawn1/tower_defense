@@ -51,7 +51,7 @@ const upgrades = {
   ],
   pulse: [
     [['Amplifier · +15% damage',{power:1.15}],['Quick charge · 15% shorter recharge',{reload:.85}],['Overload · +60% damage',{power:1.6}],['Cascade · halves recharge time',{reload:.5}],['Resonance engine · fivefold damage and double pulse rate',{power:5,reload:.5}]],
-    [['Broad field · +15% range',{reach:1.15}],['Disruptor · 0.35s stun',{stun:.35}],['Repulsor · doubles knockback',{push:120}],['Static field · stuns for 1.3s and slows for 3s',{stun:1.3,slow:3}],['Exclusion field · double radius, triple repulsion and 4s stun',{reach:2,push:360,stun:4}]]
+    [['Broad field · +15% range',{reach:1.15}],['Disruptor · 10% chance to stun for 0.45s',{stunChance:.10,stun:.45}],['Repulsor · stronger shove',{push:48}],['Static field · 12% stun for 0.65s and a brief slow',{stunChance:.12,stun:.65,slow:.75}],['Exclusion field · double radius, stronger shove, 15% stun for 1s',{reach:2,push:65,stunChance:.15,stun:1}]]
   ]
 };
 
@@ -66,7 +66,7 @@ const trackNames={
 };
 const towerDefaults = {
   sniper:{pierce:2}, shotgun:{shots:7}, rocket:{blast:35}, mortar:{blast:35},
-  lightning:{chains:4,jump:90,stun:.5}, pulse:{push:60},
+  lightning:{chains:4,jump:90,stun:.5}, pulse:{push:35,stun:.25,stunChance:.08},
   frost:{slow:2}, flame:{duration:2,dot:4}, venom:{duration:2,dot:4},
   barracks:{damage:4,rifleRate:.8,cap:3,soldierHp:45,regen:0}
 };
