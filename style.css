@@ -33,7 +33,7 @@ main>section{min-width:0;width:min(100%,calc((100dvh - 148px) * var(--map-ratio,
 .board{position:relative;overflow:hidden;border:1px solid #536260;border-radius:12px;background:#49675d}
 #game{display:block;width:100%;height:auto;cursor:crosshair}
 .hint{position:absolute;top:12px;inset-inline:12px;display:flex;justify-content:space-between;pointer-events:none}.hint span,#placementLegend{background:#102727de;padding:5px 9px;border-radius:5px;color:#e6eee1}
-#placementLegend{position:absolute;bottom:10px;left:10px;pointer-events:none}.valid-dot,.blocked-dot{display:inline-block;width:8px;height:8px;background:#95cd81;border-radius:50%;margin:0 3px}.blocked-dot{background:#ee8976;margin-left:10px}
+#enemyReadout,#placementLegend{position:absolute;bottom:10px;left:10px;pointer-events:none}.valid-dot,.blocked-dot{display:inline-block;width:8px;height:8px;background:#95cd81;border-radius:50%;margin:0 3px}.blocked-dot{background:#ee8976;margin-left:10px}
 .foot{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:8px;font-size:11px;color:var(--muted)}#status{color:#f3b48d}
 aside,.tower-panel,#notice{background:var(--panel);border:1px solid var(--line);border-radius:12px}
 aside{padding:15px;max-height:calc(100dvh - 102px);overflow:auto;scrollbar-width:thin}
@@ -52,3 +52,5 @@ aside{padding:15px;max-height:calc(100dvh - 102px);overflow:auto;scrollbar-width
 .tower-heading img{width:64px;height:64px;object-fit:contain}
 .stat-tuning{margin-top:10px;border-top:1px solid var(--line);padding-top:8px}
 .stat-tuning summary{font-size:13px;color:#f4c9a8;cursor:pointer;font-weight:700}
+
+#enemyReadout{background:#102727ed;color:#e6eee1;border-radius:5px;padding:5px 9px;font-size:12px}

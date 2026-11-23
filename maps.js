@@ -129,6 +129,9 @@ function prepareRoads(map){
       edge.points.push({x:a.x+t*dx,y:a.y+dy*t*t*(3-2*t)+m0*t*u*u-m1*t*t*u});
     }
   }
+  // The camber of the southern market ramp starts pulling downhill a little
+  // before the lip, so the outer street receives traffic from the busy side.
+  if(map===maps.town)nodeAt(map.links[2][1][0]).camber=.48;
   map.roads=[...edges.values()];
   map.entry=nodeAt(map.paths[0][0]);
   map.exit=nodeAt(map.paths[0].at(-1));

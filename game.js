@@ -53,7 +53,7 @@ function buildGravity(map){
     }).sort((a,b)=>a-b);
     const incoming=n.incoming[0],p=incoming?.points.at(-2);
     const angle=p?Math.atan2(n.y-p.y,n.x-p.x):0;
-    return {x:n.x,y:n.y,cos:Math.cos(angle),sin:Math.sin(angle),half:(incoming?.width||80)/2,outlets};
+    return {x:n.x,y:n.y,cos:Math.cos(angle),sin:Math.sin(angle),half:(incoming?.width||80)/2,camber:n.camber||0,outlets};
   });
   for(let y=0;y<flowRows;y++)for(let x=0;x<flowCols;x++){
     const px=x*FLOW_CELL+5,py=y*FLOW_CELL+5;
@@ -69,7 +69,7 @@ function buildGravity(map){
       const dx=px-fan.x,dy=py-fan.y;
       const along=dx*fan.cos+dy*fan.sin,across=dy*fan.cos-dx*fan.sin;
       if(along< -38 || along>70 || Math.abs(across)>fan.half+32)continue;
-      const pos=Math.max(0,Math.min(.999,(across/fan.half+1)*.5));
+      const pos=Math.max(0,Math.min(.999,(across/fan.half+fan.camber+1)*.5));
       const choice=fan.outlets[Math.floor(pos*fan.outlets.length)];
       const weight=Math.max(0,Math.min(1,(along+38)/25,(70-along)/30));
       angle+=(choice-angle)*weight;
@@ -139,7 +139,7 @@ let money=250,health=20,wave=0,towers=[],enemies=[],effects=[],projectiles=[],so
 const shop=document.querySelector('#shop'),details=document.querySelector('#details'),status=document.querySelector('#status'),upgradeDialog=document.querySelector('#upgradeDialog'),notice=document.querySelector('#notice');
 let seenKinds=new Set(),noticeQueue=[],noticeTimer;
 function showNotice(){if(!noticeQueue.length){notice.hidden=true;noticeTimer=null;return}notice.textContent=noticeQueue.shift();notice.hidden=false;noticeTimer=setTimeout(showNotice,6000)}
-function announce(kind){if(seenKinds.has(kind))return;seenKinds.add(kind);noticeQueue.push(({normal:'Walker · A standard zombie.',brute:'Brute · Nine times walker health. Deals 5 damage to the base.',runner:'Runner · Fast, lightly built and easy to pick off.',armor:'Armored zombie · Takes half damage from bullets and rifle fire.',shock:'Insulated zombie · Immune to lightning damage and stun.',fire:'Fireproof zombie · Immune to fire damage and burning.',cold:'Frostproof zombie · Immune to cryo damage and freezing.',toxic:'Hazmat zombie · Immune to poison damage and poison.'})[kind]);if(!noticeTimer)showNotice()}
+function announce(kind,message){if(seenKinds.has(kind))return;seenKinds.add(kind);noticeQueue.push(message||({normal:'Walker · A standard zombie.',brute:'Brute · Nine times walker health. Deals 5 damage to the base.',runner:'Runner · Fast, lightly built and easy to pick off.',armor:'Armored zombie · Takes half damage from bullets and rifle fire.',shock:'Insulated zombie · Immune to lightning damage and stun.',fire:'Fireproof zombie · Immune to fire damage and burning.',cold:'Frostproof zombie · Immune to cryo damage and freezing.',toxic:'Hazmat zombie · Immune to poison damage and poison.'})[kind]);if(!noticeTimer)showNotice()}
 const foundations=[FieldArt.foundation(),FieldArt.foundation(true)];
 const sprites={}, heads={}, towerIcons={};
 const waterHit=document.createElement('canvas').getContext('2d');
@@ -157,10 +157,17 @@ for (const [type, spec] of Object.entries(types)) {
   sprites[type]=portrait(type,heads[type]);
   towerIcons[type] = sprites[type].toDataURL();
 }
-const zombieSprites = {};
-for (const [kind, color] of Object.entries({normal:'#92b286',runner:'#c9b879',brute:'#849977',armor:'#c8ad84',shock:'#b89bd1',fire:'#e8a27c',cold:'#96cdd7',toxic:'#b9ca73'})) {
-  const still=FieldArt.zombie(kind,color,0);
-  zombieSprites[kind]=kind==='runner'?[FieldArt.zombie(kind,color,-1),still,FieldArt.zombie(kind,color,1)]:[still,still,still];
+const zombieSprites=new Map();
+const skinColors={normal:'#92b286',runner:'#c9b879',brute:'#849977',armor:'#c8ad84',shock:'#b89bd1',fire:'#e8a27c',cold:'#96cdd7',toxic:'#b9ca73'};
+const enemyNames={normal:'Walker',runner:'Runner',brute:'Brute',armor:'Armored',shock:'Insulated',fire:'Fireproof',cold:'Frostproof',toxic:'Hazmat'};
+function zombieFrames(kind,tier){
+  const key=kind+'-'+tier;
+  if(!zombieSprites.has(key)){
+    const frame=step=>FieldArt.zombie(kind,skinColors[kind],step,tier,enemyTiers[tier-1].mark);
+    const still=frame(0);
+    zombieSprites.set(key,kind==='runner'?[frame(-1),still,frame(1)]:[still,still,still]);
+  }
+  return zombieSprites.get(key);
 }
 const soldierSprite = FieldArt.infantry();
 function towerIcon(type) { return towerIcons[type]; }
@@ -201,7 +208,9 @@ function showTowerDetails(t){
   };
 }
 function pos(e){let r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*activeMap.width/r.width,y:(e.clientY-r.top)*activeMap.height/r.height}}
-canvas.onmousemove=e=>mouse=pos(e);canvas.onclick=e=>{let p=pos(e);if(aiming){aiming.facing=Math.atan2(p.y-aiming.y,p.x-aiming.x);aiming.angle=aiming.facing;aiming=null;status.textContent='Tower deployed';ui();return}if(building){let t=types[building];if(money<t.cost){status.textContent='Not enough supplies';return}if(!canPlace(p)){status.textContent='Choose a clear spot';return}money-=t.cost;let tower=createTower(building,p.x,p.y);tower.wet=Boolean(overWater(p.x,p.y));towers.push(tower);aiming=omnidirectional.includes(building)?null:tower;building=null;status.textContent=aiming?'Click to choose firing direction':'Tower deployed';ui();return}selected=towers.find(a=>Math.hypot(a.x-p.x,a.y-p.y)<23)||null;ui();upgradeDialog.hidden=!selected};document.querySelector('#closeDetails').onclick=()=>{upgradeDialog.hidden=true;selected=null;ui()};function cancelPlacement(){building=null;if(aiming){money+=types[aiming.type].cost;towers=towers.filter(t=>t!==aiming);aiming=null}status.textContent='Placement cancelled';ui()}document.querySelector('#cancel').onclick=cancelPlacement;document.onkeydown=e=>{if(e.key==='Escape'&&(building||aiming))cancelPlacement()};document.querySelector('#start').onclick=()=>{wave++;waveQueue=waveRoster(wave).reverse();running=true;spawn=0;status.textContent='Wave '+wave+' incoming';ui()};
+canvas.onmousemove=e=>mouse=pos(e);
+canvas.onmouseleave=()=>{mouse={x:-100,y:-100};};
+canvas.onclick=e=>{let p=pos(e);if(aiming){aiming.facing=Math.atan2(p.y-aiming.y,p.x-aiming.x);aiming.angle=aiming.facing;aiming=null;status.textContent='Tower deployed';ui();return}if(building){let t=types[building];if(money<t.cost){status.textContent='Not enough supplies';return}if(!canPlace(p)){status.textContent='Choose a clear spot';return}money-=t.cost;let tower=createTower(building,p.x,p.y);tower.wet=Boolean(overWater(p.x,p.y));towers.push(tower);aiming=omnidirectional.includes(building)?null:tower;building=null;status.textContent=aiming?'Click to choose firing direction':'Tower deployed';ui();return}selected=towers.find(a=>Math.hypot(a.x-p.x,a.y-p.y)<23)||null;ui();upgradeDialog.hidden=!selected};document.querySelector('#closeDetails').onclick=()=>{upgradeDialog.hidden=true;selected=null;ui()};function cancelPlacement(){building=null;if(aiming){money+=types[aiming.type].cost;towers=towers.filter(t=>t!==aiming);aiming=null}status.textContent='Placement cancelled';ui()}document.querySelector('#cancel').onclick=cancelPlacement;document.onkeydown=e=>{if(e.key==='Escape'&&(building||aiming))cancelPlacement()};document.querySelector('#start').onclick=()=>{wave++;waveQueue=waveRoster(wave).reverse();running=true;spawn=0;status.textContent='Wave '+wave+' incoming';ui()};
 const immuneTo={shock:'lightning',fire:'flame',cold:'frost',toxic:'venom'};
 const ballistic=['gun','shotgun','sniper','minigun','cannon','soldier'];
 function strike(e,attack,dx=0,dy=0){
@@ -348,6 +357,7 @@ function drawUnit(sprite,unit,left,top,width,height) {
   ctx.save(); ctx.translate(unit.x,unit.y); ctx.rotate(unit.angle||0);
   ctx.drawImage(sprite,left,top,width,height); ctx.restore();
 }
+const enemyReadout=document.querySelector('#enemyReadout');
 function draw() {
   if (!started) return;
   ctx.drawImage(mapArt,0,0,activeMap.width,activeMap.height);
@@ -357,15 +367,25 @@ function draw() {
     drawUnit(t.head||heads[t.type],t,-36-(t.recoil||0),-36,72,72);
   }
   for (const a of soldiers) drawUnit(soldierSprite,a,-14,-12,32,24);
+  let inspected=null,nearest=Infinity;
   for (const e of enemies) {
     const size=e.r/9;
     const frame=e.stun>0?1:Math.round(Math.sin(e.phase))+1;
-    drawUnit(zombieSprites[e.kind][frame],e,-15*size,-15*size,38*size,30*size);
+    drawUnit(zombieFrames(e.kind,e.tier)[frame],e,-15*size,-15*size,38*size,30*size);
+    if(!building&&!aiming){
+      const d=(mouse.x-e.x)**2+(mouse.y-e.y)**2;
+      if(d<(e.r+4)**2 && d<nearest){inspected=e;nearest=d;}
+    }
     if(e.hp<e.max){
       ctx.fillStyle='#253533'; ctx.fillRect(e.x-9,e.y-e.r-5,18,2.5);
       ctx.fillStyle='#f4ce93'; ctx.fillRect(e.x-9,e.y-e.r-5,18*Math.max(0,e.hp/e.max),2.5);
     }
   }
+  if(inspected){
+    const label=enemyNames[inspected.kind]+' · Tier '+inspected.tier+' · '+Math.ceil(inspected.hp)+' / '+inspected.max+' HP';
+    if(enemyReadout.textContent!==label)enemyReadout.textContent=label;
+  }
+  enemyReadout.hidden=!inspected;
   for(const t of towers)if(t.plumeTime>0)FieldArt.flameJet(ctx,t,performance.now()*.001);
   for(const p of projectiles) FieldArt.round(ctx,p);
   for(const e of effects) FieldArt.effect(ctx,e);

@@ -561,7 +561,7 @@ const FieldArt = (() => {
     }
     return canvas;
   }
-  function zombie(kind,skin,step){
+  function zombie(kind,skin,step,tier=1,mark=null){
     // Trace the early walker's wide brow, torn shoulders and two forward hands
     // in continuous curves. Each arm has its own sleeve, wrist and finger line.
     const {canvas,g}=surface(38,30,6);g.translate(15,15);
@@ -607,6 +607,15 @@ const FieldArt = (() => {
     if(kind==='armor'){
       piece('M-3.8 -3.3 Q-2 -6.8 1.4 -6.2 L3.5 -5.6 3.3 -3.7 2.7 -1.9 2.9 1.9 3.6 4.1 2.2 5.5 Q-1 6.1 -3.6 3.2 Z','#6e7a71');
       line(g,[[-2.7,-3],[0,-4.9],[2.3,-4.6]],'#a5af96',.9);
+    }
+    if(mark){
+      // Rank insignia sits across the back. Skin, hands and resistance colors
+      // stay readable even on an armored brute.
+      piece('M-8 -4.8 L-5 -6.3 -2.8 -4.7 -3.2 4.6 -6 6 -8 4.5 Z','#344448');
+      for(let i=0;i<tier-1;i++){
+        const y=-3.5+i*2.15;
+        line(g,[[-7.2,y+.7],[-5.9,y-.3],[-4.3,y+.7]],mark,1.2);
+      }
     }
     return canvas;
   }
