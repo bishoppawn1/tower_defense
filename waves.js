@@ -1,8 +1,8 @@
 // Walkers and their resistant variants all share one unmodified movement speed.
-const walkerBody={speed:51,radius:9,health:1,melee:8,breach:1,bounty:5};
+const walkerBody={speed:51,radius:7,health:1,melee:8,breach:1,bounty:5};
 const enemyBodies={
-  runner:{speed:97,radius:8,health:.72,melee:6,breach:1,bounty:6},
-  brute:{speed:33,radius:16,health:9,melee:24,breach:5,bounty:30}
+  runner:{speed:97,radius:6.5,health:.72,melee:6,breach:1,bounty:6},
+  brute:{speed:33,radius:13,health:9,melee:24,breach:5,bounty:30}
 };
 // Health belongs to the tier and body. Wave number only selects a roster.
 const enemyTiers=[
@@ -35,7 +35,7 @@ function tierRoster(number,count){
   return shuffle(ranks);
 }
 function waveSize(number,map){
-  const base=number<=3?[22,42,68][number-1]:96+(number-4)*22;
+  const base=number<=3?[28,62,104][number-1]:160+(number-4)*38;
   return Math.round(base*map.hordeScale);
 }
 function waveRoster(number,map){
@@ -97,5 +97,5 @@ function spawnPack(dt){
     }
     waveQueue.pop();made++;
   }
-  spawn=made?made*(wave===1?.30:wave<5?.14:.065)/activeMap.hordeScale:.04;
+  spawn=made?made*(wave===1?.22:wave<5?.085:.034)/activeMap.hordeScale:.04;
 }

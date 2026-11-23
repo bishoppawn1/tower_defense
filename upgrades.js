@@ -3,15 +3,15 @@ const tierCosts = [25, 55, 180, 400, 3600];
 const upgrades = {
   gun: [
     [['Rapid feed · 12% shorter reload',{reload:.88}],['Heavy rounds · +15% damage',{power:1.15}],['Double tap · fires two rounds',{shots:2}],['Suppressive fire · three rounds that slow for 2s',{shots:3,slow:2}],['Hammer battery · six rounds per burst and double damage',{shots:6,power:2}]],
-    [['Tracer · hits two targets',{pierce:2}],['Long barrel · +15% range',{reach:1.15}],['Armor breaker · bypasses armor and adds 35% damage',{ignoreArmor:true,power:1.35}],['Belt fed · hits five targets with a 25% shorter reload',{pierce:5,reload:.75}],['Manticore belt · hits 18 targets at triple fire rate',{pierce:18,reload:1/3}]]
+    [['Match rounds · +18% damage',{power:1.18}],['Long barrel · +15% range',{reach:1.15}],['Armor breaker · bypasses armor and adds 35% damage',{ignoreArmor:true,power:1.35}],['Finisher rounds · double damage below 35% health',{finishAt:.35,finishPower:2}],['Manticore belt · triple fire rate and triple damage below half health',{reload:1/3,finishAt:.5,finishPower:3}]]
   ],
   sniper: [
-    [['Hard tips · hits three targets',{pierce:3}],['High caliber · +20% damage',{power:1.2}],['Rail shot · hits seven targets',{pierce:7}],['Shockwave · +65% damage and a 3s slow',{power:1.65,slow:3}],['Horizon rail · twelvefold damage, pierces 24 targets',{power:12,pierce:24}]],
+    [['Hard tips · hits three targets',{pierce:3}],['High caliber · +20% damage',{power:1.2}],['Rail shot · hits four targets, gaining 25% base damage after each hit',{pierce:4,lineGain:.25}],['Shockwave · +65% damage and a 3s slow',{power:1.65,slow:3}],['Horizon rail · eightfold damage, up to six hits gaining 50% base damage each',{power:8,pierce:6,lineGain:.5}]],
     [['Concussion · stuns for 0.25s',{stun:.25}],['Spotter · +15% range',{reach:1.15}],['Quick chamber · 35% shorter reload',{reload:.65}],['Crippling shot · stuns for 1.4s and bypasses armor',{stun:1.4,ignoreArmor:true}],['Deadeye array · double range, quadruple fire rate',{reach:2,reload:.25}]]
   ],
   shotgun: [
     [['Wide load · nine pellets',{shots:9}],['Buckshot · +15% damage',{power:1.15}],['Drum magazine · 35% shorter reload',{reload:.65}],['Storm shot · seventeen pellets in the same cone',{shots:17}],['Wall of lead · 35 pellets, each deals triple damage',{shots:35,power:3}]],
-    [['Choke · +15% range',{reach:1.15}],['Heavy pellets · +15% damage',{power:1.15}],['Shrapnel · each pellet hits three targets',{pierce:3}],['Stopping power · +50% damage and a 2s slow',{power:1.5,slow:2}],['Breach cannon · pellets pierce 12 and stun for 2s',{pierce:12,stun:2}]]
+    [['Choke · +15% range',{reach:1.15}],['Heavy pellets · +15% damage',{power:1.15}],['Breacher load · double pellet damage within 65 units',{closePower:2}],['Stopping power · +50% damage and a 2s slow',{power:1.5,slow:2}],['Breach cannon · fourfold point-blank damage and a 1s stun',{closePower:4,stun:1}]]
   ],
   rocket: [
     [['Blast charge · blast radius 32',{blast:32}],['Heavy warhead · +15% damage',{power:1.15}],['Fragmentation · radius 38, six targets and +25% damage',{blast:38,areaCap:6,power:1.25}],['Siege warhead · double impact damage',{power:2}],['Caldera · radius 65, ten targets and fivefold impact damage',{blast:65,areaCap:10,power:5}]],
@@ -27,30 +27,38 @@ const upgrades = {
   ],
   flame: [
     [['Pressure valve · 12% shorter reload',{reload:.88}],['Hot fuel · +15% impact damage',{power:1.15}],['Flashover · adds 3s of burn',{extraDuration:3}],['Inferno · doubles impact and adds 8 burn damage/s',{power:2,extraDot:8}],['Solar furnace · sixfold impact and +60 burn damage/s',{power:6,extraDot:60}]],
-    [['Wildfire · adds 1s of burn',{extraDuration:1}],['Long nozzle · +15% range',{reach:1.15}],['Fuel mix · adds 6 burn damage/s',{extraDot:6}],['Firestorm · hits six zombies, retains 60% heat per hit',{pierce:6,heatRetention:.6}],['Fire corridor · triple range, 18 targets, retains 70% heat per hit',{reach:3,pierce:18,heatRetention:.7}]]
+    [['Wildfire · adds 1s of burn',{extraDuration:1}],['Long nozzle · +15% range',{reach:1.15}],['Fuel mix · adds 6 burn damage/s',{extraDot:6}],['Firestorm · hits six zombies, retains 60% heat per hit',{pierce:6,heatRetention:.6}],['Fire curtain · triple range, wider jet, retains 85% heat per hit',{reach:3,jetSpread:.13,heatRetention:.85}]]
   ],
   frost: [
     [['Deep freeze · 3s slow',{slow:3}],['Cold snap · +15% damage',{power:1.15}],['Cryogenic · 7s slow and +35% damage',{slow:7,power:1.35}],['Absolute zero · freezes targets for 1s',{stun:1}],['Deep winter · freezes for 5s and deals fivefold damage',{stun:5,power:5}]],
-    [['Shatter · +20% damage',{power:1.2}],['Long hose · +15% range',{reach:1.15}],['Ice shards · hits three targets',{pierce:3}],['Blizzard · halves reload time',{reload:.5}],['Whiteout · fourfold fire rate, shards pierce 16',{reload:.25,pierce:16}]]
+    [['Shatter · +20% damage',{power:1.2}],['Long hose · +15% range',{reach:1.15}],['Rime burst · chills two nearby zombies for 1.5s',{residueCap:2,residueRadius:48,residueSlow:1.5}],['Blizzard · halves reload time',{reload:.5}],['Whiteout · double fire rate, chills four nearby zombies for 3s',{reload:.5,residueCap:4,residueRadius:75,residueSlow:3}]]
   ],
   cannon: [
     [['Belt feed · 12% shorter reload',{reload:.88}],['Heavy shell · +15% damage',{power:1.15}],['Rapid loader · 35% shorter reload',{reload:.65}],['Siege cannon · doubles shell damage',{power:2}],['Dreadnought · eightfold shell damage and double fire rate',{power:8,reload:.5}]],
-    [['Sabot · pierces two targets',{pierce:2}],['Long barrel · +15% range',{reach:1.15}],['Tungsten · ignores armor and +40% damage',{ignoreArmor:true,power:1.4}],['Rail shell · pierces six targets',{pierce:6}],['Mass driver · shells pierce 24 with double range and 3s stun',{pierce:24,reach:2,stun:3}]]
+    [['Spotter scope · +15% range',{reach:1.15}],['Fast breech · 15% shorter reload',{reload:.85}],['Giant hunter · double damage to brutes',{brutePower:2}],['Stagger shell · slows its target for 2s',{slow:2}],['Titan killer · quadruple brute damage, double range and a 1s stun',{brutePower:4,reach:2,stun:1}]]
   ],
   venom: [
     [['Concentrate · adds 1 poison damage/s',{extraDot:1}],['Corrosive · +20% impact damage',{power:1.2}],['Toxic load · adds 4 poison damage/s and 2s duration',{extraDot:4,extraDuration:2}],['Potent toxin · adds 12 poison damage/s',{extraDot:12}],['Black bloom · +100 poison damage/s and +5s duration',{extraDot:100,extraDuration:5}]],
-    [['Contagion · adds 1s of poison',{extraDuration:1}],['Long nozzle · +15% range',{reach:1.15}],['Twin nozzle · hits three targets',{pierce:3}],['Lingering toxin · adds 6s duration and 4 poison damage/s',{extraDuration:6,extraDot:4}],['Plague front · shots pierce 20 with double range and +30 poison damage/s',{pierce:20,reach:2,extraDot:30}]]
+    [['Contagion · adds 1s of poison',{extraDuration:1}],['Long nozzle · +15% range',{reach:1.15}],['Contact spores · poison jumps at half strength to two nearby zombies',{residueCap:2,residueRadius:55}],['Lingering toxin · adds 6s duration and 4 poison damage/s',{extraDuration:6,extraDot:4}],['Plague front · double range, +30 poison per second, spores reach five neighbors',{residueCap:5,residueRadius:90,reach:2,extraDot:30}]]
   ],
   minigun: [
     [['High speed · 12% shorter reload',{reload:.88}],['Reinforced rounds · +15% damage',{power:1.15}],['Rotary feed · 35% shorter reload',{reload:.65}],['Overdrive · doubles shot damage',{power:2}],['Cyclone · quad rounds at double fire rate',{shots:4,reload:.5}]],
-    [['Tracer · hits two targets',{pierce:2}],['Long barrel · +15% range',{reach:1.15}],['Heavy rounds · +55% damage',{power:1.55}],['Depleted cores · bypass armor and hit five targets',{ignoreArmor:true,pierce:5}],['Needle storm · rounds pierce 20 and deal quadruple damage',{pierce:20,power:4}]]
+    [['Motor winding · 10% shorter reload',{reload:.9}],['Long barrel · +15% range',{reach:1.15}],['Heavy rounds · +55% damage',{power:1.55}],['Depleted cores · bypass armor and fire 20% faster',{ignoreArmor:true,reload:1/1.2}],['Flywheel · double base damage, repeated hits ramp up to fourfold damage',{power:2,focusStep:.35,focusMax:4}]]
   ],
   mortar: [
     [['Wider shells · blast radius 37',{blast:37}],['Heavy shells · +20% damage',{power:1.2}],['Barrage · 35% shorter reload',{reload:.65}],['Siege shells · radius 46, eight targets and +70% damage',{blast:46,areaCap:8,power:1.7}],['Earthbreaker · radius 76, twelve targets and fivefold shell damage',{blast:76,areaCap:12,power:5}]],
     [['Long tube · +15% range',{reach:1.15}],['Concussion · slows for 1.5s',{slow:1.5}],['Pressure wave · pushes blast survivors',{push:105}],['Flashbang · stuns the blast zone for 2s',{stun:2}],['Aftershock · 5s area stun and triple fire rate',{stun:5,reload:1/3}]]
   ],
+  seeker: [
+    [['Long antenna · +15% launch range',{reach:1.15}],['Lightweight pods · 15% shorter reload',{reload:.85}],['Six-cell rack · locks six different targets',{locks:6}],['Target network · locks eight targets and adds 25% damage',{locks:8,power:1.25}],['Sky swarm · twelve distinct locks at double fire rate',{locks:12,reload:.5}]],
+    [['Dense charge · +20% missile damage',{power:1.2}],['Fast motors · 50% faster missiles',{missileSpeed:825}],['Hunter charge · double damage to brutes',{brutePower:2}],['Rearm · 35% shorter reload',{reload:.65}],['Twin launch · two missiles per target and double damage',{shots:2,power:2}]]
+  ],
+  solar: [
+    [['Hot lens · +20% direct damage',{power:1.2}],['Long mirror · +15% range',{reach:1.15}],['Deep core · bonus rises to 10% of max HP, capped at 400',{hpShare:.1,hpCap:400}],['Fast ignition · 35% shorter recharge',{reload:.65}],['Star core · 25% of max HP in bonus damage, capped at 2200',{hpShare:.25,hpCap:2200}]],
+    [['Afterglow · burns for 12 damage/s for 2s',{extraDot:12,extraDuration:2}],['Thermal sink · 15% shorter recharge',{reload:.85}],['Kiln · adds 28 burn damage/s and 2s duration',{extraDot:28,extraDuration:2}],['Flare · double impact damage below half health',{finishAt:.5,finishPower:2}],['Supernova · triple impact below half health and +180 burn damage/s',{finishAt:.5,finishPower:3,extraDot:180}]]
+  ],
   disc: [
-    [['Honed edge · +20% damage',{power:1.2}],['Wider blade · hits four targets per pass',{pierce:4}],['Serrations · slows cut targets for 1s',{slow:1}],['Mill wheel · seven targets per pass and +60% damage',{pierce:7,power:1.6}],['Harvest wheel · eighteen targets per pass and quadruple damage',{pierce:18,power:4}]],
+    [['Honed edge · +20% damage',{power:1.2}],['Wider blade · hits four targets per pass',{pierce:4}],['Serrations · slows cut targets for 1s',{slow:1}],['Mill wheel · +60% cutting damage and 20% shorter reload',{reload:.8,power:1.6}],['Harvest wheel · two fanned blades, each dealing triple damage',{shots:2,power:3}]],
     [['Tighter spool · 15% shorter reload',{reload:.85}],['Long throw · +20% range',{reach:1.2}],['Backspin · return cuts deal double damage',{returnPower:2}],['Counterweight · +25% range and 35% shorter reload',{reach:1.25,reload:.65}],['Reaper clutch · sixfold return damage and double fire rate',{returnPower:6,reload:.5}]]
   ],
   prism: [
@@ -68,12 +76,14 @@ const trackNames={
   shotgun:['Drum magazine','Breach shells'],rocket:['Siege payload','Incendiary fuel'],
   lightning:['Arc generator','Relay grid'],barracks:['Rifle company','Garrison'],
   flame:['Combustion chamber','Projector nozzle'],frost:['Cold core','Shard array'],
-  cannon:['Siege battery','Penetrator rail'],venom:['Toxin vat','Dispersal rig'],
+  cannon:['Siege battery','Brute hunter'],venom:['Toxin vat','Dispersal rig'],
   minigun:['Rotary drive','Core ammunition'],mortar:['Bombardment','Shock shells'],
+  seeker:['Guidance rack','Hunter payload'],solar:['Core optics','Afterburner'],
   disc:['Cutting wheel','Return drive'],prism:['Focus lens','Splitter optics'],
   pulse:['Resonator','Repulsor field']
 };
 const towerDefaults = {
+  seeker:{locks:4,missileSpeed:550},solar:{hpShare:.07,hpCap:260},cannon:{ignoreArmor:true},
   disc:{pierce:3,returnPower:1},prism:{focus:1,focusStep:.3,focusMax:2.2,split:0,splitReach:55,splitPower:.5},
   sniper:{pierce:2}, shotgun:{shots:7}, rocket:{blast:27,areaCap:4}, mortar:{blast:32,areaCap:5},
   lightning:{chains:4,jump:90,stun:.5}, pulse:{areaCap:5,push:35,stun:.25,stunChance:.08},

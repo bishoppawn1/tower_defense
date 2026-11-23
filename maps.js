@@ -1,114 +1,67 @@
-// Points are world units, ordered west to east. Shared stretches use identical
-// coordinates so road art, crowd movement, and building all see the same fork.
-const maps = {
-  meadow: {
-    startingSupplies:350, hordeScale:1,
-    name: 'Clover Meadow', setting: 'Meadow', size: 'Compact', width: 820, height: 480,
-    briefing: 'Start here. One winding road brings every walker past the central bend.',
-    widths: [110, 160, 58, 46, 162, 120, 48, 84],
-    paths: [[[-30,190],[125,190],[220,215],[330,298],[440,322],[555,297],[695,220],[786,220]]],
-    landmarks: []
+// Dimensions, road diameters and landmark footprints are authored in world units.
+// Identical knots join roads. Each link starts and ends on a main route.
+const maps={
+  meadow:{
+    name:'Clover Meadow',setting:'Meadow',size:'Compact',width:1540,height:840,
+    startingSupplies:350,hordeScale:1,
+    briefing:'A floodplain curls around a grassy bluff. Cover both bends from its inside bank.',
+    widths:[200,255,125,94,185,265,146,89,138,108],
+    paths:[[[-35,270],[180,270],[370,352],[550,524],[730,590],[920,535],[1100,355],[1240,265],[1380,256],[1502,256]]],
+    links:[],landmarks:[]
   },
-  forest: {
-    startingSupplies:425, hordeScale:1.15,
-    name: 'Blackpine Hollow', setting: 'Forest', size: 'Mid-size', width: 980, height: 680,
-    briefing: 'A short ridge trail and a sweeping forest road meet at the eastern clearing.',
-    widths: [124, 154, 64, 44, 128, 86, 54, 84],
-    paths: [
-      [[-30,400],[158,400],[290,296],[442,178],[602,158],[722,226],[842,296],[946,296]],
-      [[-30,400],[158,400],[326,435],[460,526],[592,508],[706,390],[842,296],[946,296]]
+  forest:{
+    name:'Blackpine Hollow',setting:'Forest',size:'Mid-size',width:1850,height:1110,
+    startingSupplies:425,hordeScale:1.15,
+    briefing:'The creek divides around two long wooded islands. The saddle between them covers both crossings.',
+    widths:[235,254,135,115,198,220,108,140,182,110],
+    paths:[
+      [[-35,564],[226,564],[463,346],[680,286],[905,486],[1040,492],[1250,302],[1460,327],[1640,468],[1812,468]],
+      [[-35,564],[226,564],[475,690],[700,738],[905,486],[1040,492],[1280,660],[1480,672],[1640,468],[1812,468]]
     ],
-    landmarks: []
+    links:[[86,[[463,346],[525,444],[606,582],[700,738]]]],landmarks:[]
   },
-  quarry: {
-    startingSupplies:500, hordeScale:1.3,
-    name: 'Redstone Quarry', setting: 'Quarry', size: 'Wide', width: 1180, height: 570,
-    briefing: 'Three haul roads fan around the excavation. The middle cut is the fastest approach.',
-    widths: [118, 158, 74, 44, 104, 50, 126, 84],
-    paths: [
-      [[-30,292],[160,292],[315,180],[480,95],[655,92],[825,150],[1000,266],[1146,266]],
-      [[-30,292],[160,292],[335,265],[485,245],[643,265],[824,305],[1000,266],[1146,266]],
-      [[-30,292],[160,292],[322,399],[480,475],[666,470],[865,384],[1000,266],[1146,266]]
+  quarry:{
+    name:'Redstone Quarry',setting:'Quarry',size:'Wide',width:2220,height:1090,
+    startingSupplies:500,hordeScale:1.3,
+    briefing:'Three haul roads fan out around the cuts. Build on the long benches or cover the diagonal ramps.',
+    widths:[265,290,126,100,176,116,158,230,120],
+    paths:[
+      [[-35,554],[270,554],[555,277],[844,192],[1160,270],[1450,224],[1730,311],[1930,485],[2182,485]],
+      [[-35,554],[270,554],[550,540],[870,570],[1150,557],[1460,493],[1735,484],[1930,485],[2182,485]],
+      [[-35,554],[270,554],[580,786],[885,885],[1180,817],[1485,862],[1725,724],[1930,485],[2182,485]]
     ],
-    landmarks: [[570,170,68,25],[515,362,108,35],[691,385,45,23],[935,80,78,31],[174,485,94,36]]
+    links:[[86,[[555,277],[655,354],[770,473],[870,570]]],[90,[[1150,557],[1250,653],[1350,762],[1485,862]]]],
+    landmarks:[[900,360,90,35],[855,735,88,31],[1330,1000,120,32],[340,908,68,30],[1610,91,94,26]]
   },
-  town: {
-    startingSupplies:600, hordeScale:1.45,
-    name: 'Bellwether Ruins', setting: 'Ruined town', size: 'Large', width: 1160, height: 820,
-    briefing: 'Four streets leave the old market. Build in the vacant lots or guard the eastern junction.',
-    widths: [116, 144, 66, 46, 96, 58, 110, 54, 84, 84],
-    paths: [
-      [[-30,450],[120,450],[245,425],[312,197],[502,155],[686,163],[805,243],[985,294],[1126,294]],
-      [[-30,450],[120,450],[245,425],[385,328],[523,380],[636,389],[733,292],[805,243],[985,294],[1126,294]],
-      [[-30,450],[120,450],[267,530],[396,555],[523,452],[636,389],[750,447],[854,415],[985,294],[1126,294]],
-      [[-30,450],[120,450],[267,530],[391,689],[607,673],[755,591],[854,415],[985,294],[1126,294]]
+  town:{
+    name:'Bellwether Ruins',setting:'Ruined town',size:'Large',width:2480,height:1460,
+    startingSupplies:600,hordeScale:1.45,
+    briefing:'Four avenues surround the market blocks. Two inner streets meet at a square and split again near the station.',
+    widths:[240,258,155,116,110,156,176,126,195,118],
+    paths:[
+      [[-35,735],[235,735],[480,533],[748,280],[1060,261],[1380,303],[1660,367],[1950,456],[2190,625],[2442,625]],
+      [[-35,735],[235,735],[480,533],[765,495],[1065,560],[1370,685],[1690,561],[1950,456],[2190,625],[2442,625]],
+      [[-35,735],[235,735],[492,894],[765,851],[1060,813],[1370,685],[1660,794],[1900,842],[2190,625],[2442,625]],
+      [[-35,735],[235,735],[492,894],[755,1122],[1075,1192],[1410,1110],[1665,1035],[1900,842],[2190,625],[2442,625]]
     ],
-    landmarks: [[107,155,45,31],[207,182,33,25],[448,257,20,15],[621,235,41,28],
-      [353,449,36,18],[443,423,26,18],[558,556,49,34],[675,510,28,22],[813,345,24,16],
-      [962,163,53,33],[1032,560,54,33],[218,703,41,31],[716,751,47,25],[965,699,58,33]]
-
+    links:[[84,[[748,280],[870,358],[977,455],[1065,560]]],[80,[[765,851],[882,950],[975,1051],[1075,1192]]],[90,[[1380,303],[1485,382],[1588,476],[1690,561]]]],
+    landmarks:[[287,206,65,40],[510,216,59,28],[1070,395,28,18],[1270,426,46,30],[840,680,82,28],[536,720,53,34],[1110,997,49,35],[1430,919,52,27],[1819,664,51,36],[2080,220,79,52],[2170,1040,63,48],[684,1320,68,43]]
   },
-  marsh: {
-    startingSupplies:700, hordeScale:1.6,
-    name: 'Saltmarsh Delta', setting: 'Wetlands', size: 'Expansive', width: 1450, height: 750,
-    briefing: 'Two causeways split again around tidal pools. Four narrow crossings return to a single levee.',
-    widths: [126, 170, 90, 58, 42, 126, 64, 48, 128, 84],
-    paths: [
-      [[-30,378],[183,378],[342,294],[464,228],[657,111],[802,97],[977,216],[1112,285],[1274,378],[1416,378]],
-      [[-30,378],[183,378],[342,294],[464,228],[641,274],[798,300],[977,216],[1112,285],[1274,378],[1416,378]],
-      [[-30,378],[183,378],[348,457],[514,518],[694,443],[826,426],[1032,520],[1148,459],[1274,378],[1416,378]],
-      [[-30,378],[183,378],[348,457],[514,518],[682,619],[828,646],[1032,520],[1148,459],[1274,378],[1416,378]]
+  marsh:{
+    name:'Saltmarsh Delta',setting:'Wetlands',size:'Expansive',width:3040,height:1580,
+    startingSupplies:700,hordeScale:1.6,
+    briefing:'Four tidal channels cut around reed islands. Guard the upstream fords or group pontoons where the channels meet.',
+    widths:[278,310,185,145,103,190,132,118,192,125],
+    paths:[
+      [[-35,760],[310,760],[635,521],[930,332],[1240,252],[1550,290],[1875,365],[2180,461],[2640,755],[3002,755]],
+      [[-35,760],[310,760],[635,521],[940,602],[1235,652],[1550,630],[1860,594],[2180,461],[2640,755],[3002,755]],
+      [[-35,760],[310,760],[645,967],[945,893],[1240,858],[1555,930],[1880,890],[2240,875],[2640,755],[3002,755]],
+      [[-35,760],[310,760],[645,967],[925,1187],[1245,1292],[1560,1260],[1905,1165],[2240,875],[2640,755],[3002,755]]
     ],
-    landmarks: [[745,190,70,30],[750,535,82,32],[619,370,103,34],[208,142,100,38],
-      [173,570,96,43],[1150,125,105,45],[1241,599,85,39],[945,349,60,25]]
+    links:[[100,[[940,602],[1045,682],[1130,776],[1240,858]]],[92,[[1555,930],[1660,835],[1760,710],[1860,594]]],[98,[[1875,365],[1980,484],[2090,675],[2240,875]]]],
+    landmarks:[[865,780,100,42],[1270,450,144,56],[1580,1075,110,46],[2155,1090,102,44],[895,1370,190,61],[2380,294,170,64],[520,300,153,48],[2700,1180,189,62]]
   }
 };
-
-// Crossings are playable roads. Both endpoints occur on existing approaches.
-// A bend may contain extra points, but travel always progresses eastward.
-maps.forest.links=[
-  [54,[[290,296],[348,323],[397,385],[460,526]]]
-];
-maps.quarry.links=[
-  [50,[[315,180],[380,188],[432,220],[485,245]]],
-  [50,[[643,265],[714,310],[774,368],[865,384]]]
-];
-maps.town.links=[
-  [48,[[312,197],[365,233],[418,302],[523,380]]],
-  [48,[[502,155],[527,226],[558,285],[636,389]]],
-  [53,[[396,555],[426,602],[518,642],[607,673]]]
-];
-maps.marsh.links=[
-  [59,[[342,294],[394,315],[429,385],[463,459],[514,518]]],
-  [53,[[641,274],[696,332],[753,382],[826,426]]],
-  [57,[[826,426],[899,382],[951,321],[1025,280],[1112,285]]]
-];
-maps.forest.briefing='A creek-side trail crosses from the pine ridge into the hollow. The junction commands both valleys.';
-maps.quarry.briefing='Three haul roads change levels on two cutting ramps. Pits protect the shortcuts from one side.';
-maps.town.briefing='Market streets meet narrow alleys between bombed-out blocks. The central square covers several crossings.';
-maps.marsh.briefing='Raised trails cross the tidal basin in both directions. Build on the pools to cover the boardwalks.';
-
-// Give the later fronts distinct physical scales, including room between streets
-// for tower clusters. Ranges, unit sizes and road widths stay in world units.
-function expandZone(map,sx,sy){
-  const point=([x,y])=>[Math.round(x*sx),Math.round(y*sy)];
-  map.width=Math.round(map.width*sx);map.height=Math.round(map.height*sy);
-  map.paths=map.paths.map(path=>path.map(point));
-  map.links=(map.links||[]).map(([w,path])=>[w,path.map(point)]);
-  map.landmarks=map.landmarks.map(([x,y,rx,ry])=>[...point([x,y]),Math.round(rx*sx),Math.round(ry*sy)]);
-}
-expandZone(maps.town,1.22,1.10);
-expandZone(maps.marsh,1.23,1.13);
-maps.marsh.landmarks.push([519,144,128,51],[1044,797,142,33]);
-
-// Expand the battlefield and its roads together. Bodies, ranges, and movement
-// speeds stay in world units, so a wider opening really carries more zombies.
-const fieldScale=1.55;
-for(const map of Object.values(maps)){
-  expandZone(map,fieldScale,fieldScale);
-  map.widths=map.widths.map(w=>Math.round(w*fieldScale));
-  map.links=map.links.map(([width,path])=>[Math.round(width*fieldScale),path]);
-}
 
 function prepareRoads(map){
   const nodes=new Map(),edges=new Map();

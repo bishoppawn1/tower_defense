@@ -281,7 +281,10 @@ const FieldArt = (() => {
     const roadbed=roadOutline(segments);
     g.lineWidth=10;g.strokeStyle=palette.edge;g.stroke(roadbed);
     g.lineWidth=4;g.strokeStyle=urban?'#c2beb0':palette.edge;g.stroke(roadbed);
-    g.fillStyle=gradient(g,0,0,width,height,...palette.road);g.fill(roadbed);
+    // The lit bank and its shaded face follow the same edge as placement.
+    g.fillStyle=palette.edge;g.fill(roadbed);
+    g.save();g.clip(roadbed);g.translate(0,urban?4:quarry?12:7);
+    g.fillStyle=gradient(g,0,0,width,height,...palette.road);g.fill(roadbed);g.restore();
     // Faint wheel ruts carry the eye through forks without marking enemy lanes.
     for(const road of roads){
       for(const offset of urban?[0]:[-11,11]){
@@ -495,6 +498,28 @@ const FieldArt = (() => {
       }
       if(left===5){for(const y of [-10,10])tube(-18,y,11,5,copper);}
       if(right===5){for(const y of [-9,9])lens(15,y,3,accent);}
+    }else if(type==='seeker'){
+      casework(-15,-11,25,22,carbon,4);
+      for(const side of [-1,1]){
+        casework(-12,side*9-4.5,29+right,9,alloy);
+        for(const row of [-1.8,1.8]){
+          tube(-8,side*9+row,23+right,3.2,carbon);
+          oval(g,15+right,side*9+row,.9,1.45,accent);
+        }
+      }
+      lens(0,0,4,accent);trackPod(left,15);trackPod(right,-15,true);
+      if(left>=3)casework(-10,-3,19,6,carbon);
+      if(right>=3)lens(11,0,2+right*.4,accent);
+    }else if(type==='solar'){
+      casework(-13,-9,25,19,carbon,4);
+      for(const side of [-1,1]){
+        shape(g,[[-15,side*5],[-14,side*12],[-2,side*16],[10,side*11],[14,side*5],[2,side*8]],
+          gradient(g,-11,-10,13,13,'#fff0b7','#d5a853','#8f683c'),'#53483f');
+        line(g,[[-10,side*11],[0,side*12],[9,side*8]],'#fff1c4',1);
+      }
+      tube(1,0,20+left,5,copper);lens(2,0,5.5+left*.4,accent);
+      trackPod(left,17,true);trackPod(right,-17);
+      if(right>=3)lens(13,-7,2.2+right*.25,'#ffc380');
     }else if(type==='disc'){
       casework(-14,-9,28,18,carbon,4);
       for(const y of [-6,6])tube(1,y,20+right,4.5,copper);
@@ -671,10 +696,11 @@ const FieldArt = (() => {
     return canvas;
   }
   function flameJet(g,t,seconds){
-    const muzzle=19,start=Math.min(muzzle,t.plumeLength*.7),len=Math.max(4,t.plumeLength-start);
+    const muzzle=13,start=Math.min(muzzle,t.plumeLength*.7),len=Math.max(4,t.plumeLength-start);
     const phase=seconds*22+t.x*.11+t.y*.07,fade=Math.max(0,Math.min(1,t.plumeTime/.045));
     g.save();g.translate(t.x,t.y);g.rotate(t.angle);g.translate(start,0);g.globalAlpha=.88*fade;
     function tongue(length,width,offset,phaseShift,colors){
+      width*=t.jetSpread?2.4:1;
       const pts=[];
       for(const side of [-1,1]){
         for(let j=0;j<=18;j++){
@@ -701,9 +727,9 @@ const FieldArt = (() => {
       }
       oval(g,0,0,2.6,2.6,'#526969');g.restore();return;
     }
-    const colors={frost:'#96edff',venom:'#cbeb6f',flame:'#ff9852',rocket:'#ffc187',mortar:'#e8c79b',sniper:'#fff5d2'};
+    const colors={seeker:'#9af4cf',frost:'#96edff',venom:'#cbeb6f',flame:'#ff9852',rocket:'#ffc187',mortar:'#e8c79b',sniper:'#fff5d2'};
     const color=colors[p.type]||'#ffe3a1';
-    const shell=p.type==='mortar'||p.type==='rocket';
+    const shell=['mortar','rocket','seeker'].includes(p.type);
     const arc=p.type==='mortar'&&p.total?Math.sin(Math.PI*(1-p.remaining/p.total))*24:0;
     g.save();g.translate(p.x,p.y-arc);g.rotate(Math.atan2(p.dy,p.dx));
     shape(g,[[-(shell?12:8),0],[1,-1.6],[4,0],[1,1.6]],color+'a8');
@@ -712,7 +738,12 @@ const FieldArt = (() => {
   }
   function effect(g,e){
     g.save();g.lineCap=g.lineJoin='round';
-    if(e.prism){
+    if(e.solar){
+      const beam=[[e.x,e.y],[e.x2,e.y2]],power=Math.max(.05,e.time/.22);
+      g.globalAlpha=power;
+      line(g,beam,'#f19a4477',12);line(g,beam,'#ffd884',5);line(g,beam,'#fff8d9',2);
+      oval(g,e.x2,e.y2,7*power,7*power,'#ffcf7ad9');
+    }else if(e.prism){
       const beam=[[e.x,e.y],[e.x2,e.y2]];
       line(g,beam,e.color+'88',4.5);line(g,beam,'#ffe7fc',1.4);
       oval(g,e.x2,e.y2,2.7,2.7,'#ffd2ec');
