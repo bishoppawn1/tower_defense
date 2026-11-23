@@ -495,6 +495,27 @@ const FieldArt = (() => {
       }
       if(left===5){for(const y of [-10,10])tube(-18,y,11,5,copper);}
       if(right===5){for(const y of [-9,9])lens(15,y,3,accent);}
+    }else if(type==='disc'){
+      casework(-14,-9,28,18,carbon,4);
+      for(const y of [-6,6])tube(1,y,20+right,4.5,copper);
+      oval(g,-3,0,12+left*.55,10,gradient(g,-12,-8,8,9,'#e5b980','#99734d','#494e48'));
+      for(let i=0;i<7;i++){
+        g.save();g.translate(-3,0);g.rotate(i*tau/7);
+        shape(g,[[5,-2],[11+left*.55,-4],[9,2],[5,4]],'#dbc29c','#665943');g.restore();
+      }
+      lens(-3,0,3.2,accent);trackPod(left,12,true);trackPod(right,-12);
+      if(right>=3)lens(14,-7,2.8,'#a1dbc5');
+    }else if(type==='prism'){
+      casework(-12,-9,22,18,carbon,5);
+      for(const side of [-1,1]){
+        tube(-9,side*8,24,3.5,alloy);lens(14,side*8,2.2,accent);
+      }
+      const tip=17+left;
+      shape(g,[[-10,0],[-3,-8],[7,-6],[tip,0],[7,7],[-3,8]],'#a55b99','#43374e');
+      shape(g,[[-8,0],[-2,-7],[6,-5],[tip,0],[4,1]],'#ffe4fa');
+      shape(g,[[-8,0],[4,1],[tip,0],[5,6],[-2,7]],'#cf84c0');
+      trackPod(left,12);trackPod(right,-12);
+      if(right>=3)for(const y of [-10,10])lens(10,y,1.3+right*.45,'#ecd4ff');
     }else if(type==='rocket'){
       const rows=left>=3?3:2;
       for(let i=0;i<rows;i++){
@@ -673,6 +694,13 @@ const FieldArt = (() => {
     g.restore();
   }
   function round(g,p) {
+    if(p.type==='disc'){
+      g.save();g.translate(p.x,p.y);g.rotate((p.total-p.remaining)*.11);
+      for(let i=0;i<5;i++){
+        shape(g,[[1,-1],[6,-2],[4,2],[1,3]],'#f6bb73','#795c42');g.rotate(tau/5);
+      }
+      oval(g,0,0,2.6,2.6,'#526969');g.restore();return;
+    }
     const colors={frost:'#96edff',venom:'#cbeb6f',flame:'#ff9852',rocket:'#ffc187',mortar:'#e8c79b',sniper:'#fff5d2'};
     const color=colors[p.type]||'#ffe3a1';
     const shell=p.type==='mortar'||p.type==='rocket';
@@ -684,7 +712,11 @@ const FieldArt = (() => {
   }
   function effect(g,e){
     g.save();g.lineCap=g.lineJoin='round';
-    if(e.flash){
+    if(e.prism){
+      const beam=[[e.x,e.y],[e.x2,e.y2]];
+      line(g,beam,e.color+'88',4.5);line(g,beam,'#ffe7fc',1.4);
+      oval(g,e.x2,e.y2,2.7,2.7,'#ffd2ec');
+    }else if(e.flash){
       const r=4+3*Math.min(1,e.time/.08);
       oval(g,e.x,e.y,r*1.2,r*1.2,e.color+'44');
       const points=[];for(let i=0;i<10;i++){const a=i*tau/10,dist=i%2?r*.32:r;points.push([e.x+Math.cos(a)*dist,e.y+Math.sin(a)*dist]);}

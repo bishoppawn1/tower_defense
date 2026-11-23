@@ -2,6 +2,7 @@
 // coordinates so road art, crowd movement, and building all see the same fork.
 const maps = {
   meadow: {
+    startingSupplies:350, hordeScale:1,
     name: 'Clover Meadow', setting: 'Meadow', size: 'Compact', width: 820, height: 480,
     briefing: 'Start here. One winding road brings every walker past the central bend.',
     widths: [110, 160, 58, 46, 162, 120, 48, 84],
@@ -9,6 +10,7 @@ const maps = {
     landmarks: []
   },
   forest: {
+    startingSupplies:425, hordeScale:1.15,
     name: 'Blackpine Hollow', setting: 'Forest', size: 'Mid-size', width: 980, height: 680,
     briefing: 'A short ridge trail and a sweeping forest road meet at the eastern clearing.',
     widths: [124, 154, 64, 44, 128, 86, 54, 84],
@@ -19,6 +21,7 @@ const maps = {
     landmarks: []
   },
   quarry: {
+    startingSupplies:500, hordeScale:1.3,
     name: 'Redstone Quarry', setting: 'Quarry', size: 'Wide', width: 1180, height: 570,
     briefing: 'Three haul roads fan around the excavation. The middle cut is the fastest approach.',
     widths: [118, 158, 74, 44, 104, 50, 126, 84],
@@ -30,6 +33,7 @@ const maps = {
     landmarks: [[570,170,68,25],[515,362,108,35],[691,385,45,23],[935,80,78,31],[174,485,94,36]]
   },
   town: {
+    startingSupplies:600, hordeScale:1.45,
     name: 'Bellwether Ruins', setting: 'Ruined town', size: 'Large', width: 1160, height: 820,
     briefing: 'Four streets leave the old market. Build in the vacant lots or guard the eastern junction.',
     widths: [116, 144, 66, 46, 96, 58, 110, 54, 84, 84],
@@ -45,6 +49,7 @@ const maps = {
 
   },
   marsh: {
+    startingSupplies:700, hordeScale:1.6,
     name: 'Saltmarsh Delta', setting: 'Wetlands', size: 'Expansive', width: 1450, height: 750,
     briefing: 'Two causeways split again around tidal pools. Four narrow crossings return to a single levee.',
     widths: [126, 170, 90, 58, 42, 126, 64, 48, 128, 84],

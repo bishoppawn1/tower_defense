@@ -3,7 +3,11 @@ const canvas=document.querySelector('#game'),ctx=canvas.getContext('2d');
 const types={gun:{name:'Gun tower',cost:50,range:140,rate:.45,damage:9,color:'#d5dcb3',desc:'Reliable single-target fire'},sniper:{name:'Sniper tower',cost:85,range:260,rate:1.65,damage:30,color:'#d6c89a',desc:'Long range · piercing shots'},shotgun:{name:'Shotgun tower',cost:75,range:100,rate:1.1,damage:9,color:'#e0b26d',desc:'Short range · directional spread'},rocket:{name:'Rocket tower',cost:110,range:180,rate:1.6,damage:30,color:'#d6845e',desc:'Blast damage falls off · up to four targets'},lightning:{name:'Lightning tower',cost:120,range:150,rate:1.35,damage:13,color:'#8bc8d0',desc:'Chains between enemies · stuns'}};
 Object.assign(types,{barracks:{name:'Barracks',cost:110,range:130,rate:3,damage:0,color:'#79a7ad',desc:'Deploys soldiers during waves'},flame:{name:'Flamethrower',cost:90,range:105,rate:.18,damage:4,color:'#f18d4c',desc:'Burns through three targets · each hit loses heat'},frost:{name:'Cryo tower',cost:95,range:140,rate:.8,damage:6,color:'#9adbe2',desc:'Chilling rounds slow zombies'},cannon:{name:'Autocannon',cost:125,range:180,rate:.65,damage:18,color:'#d8c17e',desc:'Heavy armor-piercing shells'},venom:{name:'Toxic sprayer',cost:100,range:130,rate:.7,damage:5,color:'#b2d75d',desc:'Poison damages over time'}});
 Object.assign(types,{minigun:{name:'Minigun',cost:100,range:155,rate:.16,damage:4,color:'#d9b664',desc:'Rapid automatic fire'},mortar:{name:'Mortar',cost:130,range:230,rate:2.5,damage:22,color:'#d99f6c',desc:'Arcing shells · up to five targets per blast'},pulse:{name:'Pulse tower',cost:115,range:105,rate:1.8,damage:8,color:'#b5b1ef',desc:'Shoves up to five nearby zombies · 8% stun chance'}});
-const omnidirectional=['gun','lightning','barracks','frost','venom','minigun','mortar','pulse'];
+Object.assign(types,{
+  disc:{name:'Disc launcher',cost:105,range:155,rate:1.35,damage:11,color:'#eda15e',desc:'Blades cut through zombies on the way out and back.'},
+  prism:{name:'Prism turret',cost:140,range:150,rate:.42,damage:5,color:'#f2aeea',desc:'A focused beam grows stronger on the same target.'}
+});
+const omnidirectional=['gun','lightning','barracks','frost','venom','minigun','mortar','pulse','prism'];
 let started=false;
 const FLOW_CELL=10;
 let activeMap=maps.meadow, segments=[], exitGate, flowCols, flowRows, flowField;
@@ -141,7 +145,7 @@ function buildableGround(x,y){
   return true;
 }
 function canPlace(p){return buildableGround(p.x,p.y)&&!towers.some(t=>Math.hypot(t.x-p.x,t.y-p.y)<44)}
-let money=250,health=20,wave=0,towers=[],enemies=[],effects=[],projectiles=[],soldiers=[],selected=null,building=null,aiming=null,waveQueue=[],spawn=0,running=false,over=false,mouse={x:-100,y:-100};
+let money=activeMap.startingSupplies,health=20,wave=0,towers=[],enemies=[],effects=[],projectiles=[],soldiers=[],selected=null,building=null,aiming=null,waveQueue=[],spawn=0,running=false,over=false,mouse={x:-100,y:-100};
 const shop=document.querySelector('#shop'),details=document.querySelector('#details'),status=document.querySelector('#status'),upgradeDialog=document.querySelector('#upgradeDialog'),notice=document.querySelector('#notice');
 let seenKinds=new Set(),noticeQueue=[],noticeTimer;
 function showNotice(){if(!noticeQueue.length){notice.hidden=true;noticeTimer=null;return}notice.textContent=noticeQueue.shift();notice.hidden=false;noticeTimer=setTimeout(showNotice,6000)}
@@ -173,25 +177,63 @@ function zombieSprite(kind,tier){
 }
 const soldierSprite = FieldArt.infantry();
 function towerIcon(type) { return towerIcons[type]; }
-function ui(){document.querySelector('#money').textContent=money;document.querySelector('#health').textContent=health;document.querySelector('#wave').textContent=wave;document.querySelector('#cancel').hidden=!(building||aiming);document.querySelector('#placementLegend').hidden=!building;speedButton.disabled=over;document.querySelector('#start').disabled=running||over;document.querySelector('#start').textContent=over?'Outpost lost':running?'Wave in progress':'Start wave →';shop.innerHTML='';Object.entries(types).forEach(([key,t])=>{let b=document.createElement('button');b.className='tower '+(building===key?'active':'');b.innerHTML=`<img class="icon" src="${towerIcon(key)}" alt=""><span><strong>${t.name}</strong></span><span class="cost">${t.cost} ⬡</span>`;b.onclick=()=>{upgradeDialog.hidden=true;if(aiming){money+=types[aiming.type].cost;towers=towers.filter(t=>t!==aiming);aiming=null}building=key;selected=null;ui()};shop.appendChild(b)});if(selected)showTowerDetails(selected);}
-function showTowerDetails(t){
+for(const [key,t] of Object.entries(types)){
+  const button=document.createElement('button');
+  button.className='tower';button.dataset.type=key;
+  button.innerHTML=`<img class="icon" src="${towerIcon(key)}" alt=""><span><strong>${t.name}</strong></span><span class="cost">${t.cost} ⬡</span>`;
+  button.onclick=()=>{
+    upgradeDialog.hidden=true;
+    if(aiming){money+=types[aiming.type].cost;towers=towers.filter(a=>a!==aiming);aiming=null;}
+    building=key;selected=null;ui();
+  };
+  shop.appendChild(button);
+}
+let inspectedTower,inspectedSpend;
+function ui(){
+  document.querySelector('#money').textContent=money;document.querySelector('#health').textContent=health;
+  document.querySelector('#wave').textContent=wave;
+  document.querySelector('#cancel').hidden=!(building||aiming);document.querySelector('#placementLegend').hidden=!building;
+  speedButton.disabled=over;
+  const start=document.querySelector('#start');start.disabled=running||over;
+  start.textContent=over?'Outpost lost':running?'Wave in progress':'Start wave →';
+  for(const button of shop.children)button.classList.toggle('active',button.dataset.type===building);
+  const squad=selected?.type==='barracks'?soldiers.filter(s=>s.home===selected&&s.hp>0).length:0;
+  if(selected&&(selected!==inspectedTower||selected.spent!==inspectedSpend)){
+    showTowerDetails(selected,squad);
+    inspectedSpend=selected.spent;
+  }
+  if(selected?.type==='barracks')details.querySelector('.squad-count').textContent=squad;
+  inspectedTower=selected;
+  if(selected){
+    for(const button of details.querySelectorAll('[data-cost]'))button.disabled=money<Number(button.dataset.cost);
+  }
+}
+function showTowerDetails(t,squad){
   const barracks=t.type==='barracks';
-  const tierRows=upgrades[t.type].map((track,i)=>`<div class="track"><small>${trackNames[t.type][i]}</small>${track.map(([text],n)=>{
-    const bought=n<t.upgrades[i],next=n===t.upgrades[i];
-    return `<button class="upgrade" data-track="${i}" data-tier="${n}" ${next?'':'disabled'}>${n+1}. ${text}<br>${bought?'Purchased':(next?'':'Locked · ')+tierCosts[n]+' ⬡'}</button>`;
-  }).join('')}</div>`).join('');
+  const tierRows=upgrades[t.type].map((track,i)=>{
+    const n=t.upgrades[i];
+    if(n===track.length)return '';
+    const [name,benefit]=track[n][0].split(' · ');
+    const following=track[n+1]?.[0].split(' · ')[0];
+    return `<button class="upgrade track-card" data-track="${i}" data-tier="${n}" data-cost="${tierCosts[n]}">
+      <small>${trackNames[t.type][i]} · ${n+1}/${track.length}</small>
+      <strong>${name}</strong><span>${benefit}</span>
+      <b>Buy · ${tierCosts[n]} ⬡</b>${following?`<span class="following">Then · ${following}</span>`:''}
+    </button>`;
+  }).join('');
   const labels={damage:barracks?'Rifle damage':'Damage',speed:barracks?'Rifle fire rate':'Fire rate',range:barracks?'Patrol radius':'Range'};
-  const tuningOpen=details.querySelector('.stat-tuning')?.open;
   const tuningRows=Object.entries(tuning).map(([key,step])=>
-    `<button class="upgrade" data-tune="${key}">${labels[key]} +${Math.round(step*100)}% · Rank ${t.ranks[key]}<br>${tuningCost(t)} ⬡</button>`).join('');
-  details.innerHTML=`<div class="tower-heading"><img src="${t.portrait||towerIcons[t.type]}" alt=""><div><small>Selected tower</small><h2>${types[t.type].name}</h2></div></div>
+    `<button class="upgrade stat-buy" data-tune="${key}" data-cost="${tuningCost(t)}"><span>${labels[key]} +${Math.round(step*100)}%<small>Rank ${t.ranks[key]}</small></span>
+      <b>${tuningCost(t)} ⬡</b></button>`).join('');
+  details.innerHTML=`<div class="tower-heading"><img src="${t.portrait||towerIcons[t.type]}" alt=""><h2>${types[t.type].name}</h2></div>
     <p>${labels.damage} ${Number(t.damage.toFixed(2))} · ${(1/(barracks?t.rifleRate:t.rate)).toFixed(2)}/s · ${labels.range} ${Math.round(t.range)}
+    ${t.type==='disc'||t.type==='prism'?`<br>${types[t.type].desc}`:''}
     ${t.type==='flame'?`<br>Up to ${t.pierce} targets · keeps ${Math.round(100*t.heatRetention)}% heat per hit`:''}
     ${t.areaCap?`<br>Up to ${t.areaCap} targets · damage fades toward the edge`:''}
-    ${barracks?`<br>Soldiers ${soldiers.filter(a=>a.home===t&&a.hp>0).length} / ${t.cap}`:''}</p>
-    <button class="sell" id="sellTower">Sell · ${Math.floor(t.spent*.7)} ⬡</button>
-    <details class="stat-tuning" ${tuningOpen?'open':''}><summary>Stat upgrades · ${tuningCost(t)} ⬡</summary>${tuningRows}</details>
-    ${tierRows}`;
+    ${barracks?`<br>Soldiers <span class="squad-count">${squad}</span> / ${t.cap}`:''}</p>
+    <section class="stat-tuning"><h3>Base upgrades</h3><div class="stat-options">${tuningRows}</div></section>
+    ${tierRows?`<div class="track-options">${tierRows}</div>`:''}
+    <button class="sell" id="sellTower">Sell · ${Math.floor(t.spent*.7)} ⬡</button>`;
   details.onclick=event=>{
     const button=event.target.closest('button');
     if(!button||selected!==t)return;
@@ -214,7 +256,7 @@ function showTowerDetails(t){
 function pos(e){let r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*activeMap.width/r.width,y:(e.clientY-r.top)*activeMap.height/r.height}}
 canvas.onmousemove=e=>mouse=pos(e);
 canvas.onmouseleave=()=>{mouse={x:-100,y:-100};};
-canvas.onclick=e=>{let p=pos(e);if(aiming){aiming.facing=Math.atan2(p.y-aiming.y,p.x-aiming.x);aiming.angle=aiming.facing;aiming=null;status.textContent='Tower deployed';ui();return}if(building){let t=types[building];if(money<t.cost){status.textContent='Not enough supplies';return}if(!canPlace(p)){status.textContent='Choose a clear spot';return}money-=t.cost;let tower=createTower(building,p.x,p.y);tower.wet=Boolean(overWater(p.x,p.y));towers.push(tower);aiming=omnidirectional.includes(building)?null:tower;building=null;status.textContent=aiming?'Click to choose firing direction':'Tower deployed';ui();return}selected=towers.find(a=>Math.hypot(a.x-p.x,a.y-p.y)<23)||null;ui();upgradeDialog.hidden=!selected};document.querySelector('#closeDetails').onclick=()=>{upgradeDialog.hidden=true;selected=null;ui()};function cancelPlacement(){building=null;if(aiming){money+=types[aiming.type].cost;towers=towers.filter(t=>t!==aiming);aiming=null}status.textContent='Placement cancelled';ui()}document.querySelector('#cancel').onclick=cancelPlacement;document.onkeydown=e=>{if(e.key==='Escape'&&(building||aiming))cancelPlacement()};document.querySelector('#start').onclick=()=>{wave++;waveQueue=waveRoster(wave).reverse();running=true;spawn=0;status.textContent='Wave '+wave+' incoming';ui()};
+canvas.onclick=e=>{let p=pos(e);if(aiming){aiming.facing=Math.atan2(p.y-aiming.y,p.x-aiming.x);aiming.angle=aiming.facing;aiming=null;status.textContent='Tower deployed';ui();return}if(building){let t=types[building];if(money<t.cost){status.textContent='Not enough supplies';return}if(!canPlace(p)){status.textContent='Choose a clear spot';return}money-=t.cost;let tower=createTower(building,p.x,p.y);tower.wet=Boolean(overWater(p.x,p.y));towers.push(tower);aiming=omnidirectional.includes(building)?null:tower;building=null;status.textContent=aiming?'Click to choose firing direction':'Tower deployed';ui();return}selected=towers.find(a=>Math.hypot(a.x-p.x,a.y-p.y)<23)||null;ui();upgradeDialog.hidden=!selected};document.querySelector('#closeDetails').onclick=()=>{upgradeDialog.hidden=true;selected=null;ui()};function cancelPlacement(){building=null;if(aiming){money+=types[aiming.type].cost;towers=towers.filter(t=>t!==aiming);aiming=null}status.textContent='Placement cancelled';ui()}document.querySelector('#cancel').onclick=cancelPlacement;document.onkeydown=e=>{if(e.key==='Escape'&&(building||aiming))cancelPlacement()};document.querySelector('#start').onclick=()=>{wave++;waveQueue=waveRoster(wave,activeMap).reverse();running=true;spawn=0;status.textContent='Wave '+wave+' incoming';ui()};
 const immuneTo={shock:['lightning'],fire:['flame'],cold:['frost'],toxic:['venom'],
   blast:['rocket','mortar','pulse'],brute:['pulse']};
 const ballistic=['gun','shotgun','sniper','minigun','cannon','soldier'];
@@ -258,7 +300,7 @@ function areaStrike(attack,x,y,radius){
 function fire(t,target){
   const type=t.type;
   t.angle=Math.atan2(target.y-t.y,target.x-t.x);
-  if(!['lightning','flame','pulse','venom','frost'].includes(type))t.recoil=t.blast?2.8:1.4;
+  if(!['lightning','flame','pulse','venom','frost','prism'].includes(type))t.recoil=t.blast?2.8:1.4;
   if(type==='flame'){
     const dx=Math.cos(t.angle),dy=Math.sin(t.angle);
     const contacts=[];
@@ -281,6 +323,22 @@ function fire(t,target){
     t.plumeTime=t.rate+.045;
     return;
   }
+  if(type==='prism'){
+    t.focus=t.locked===target?Math.min(t.focusMax,t.focus+t.focusStep):1;
+    t.locked=target;
+    const damage=t.damage*t.focus;
+    strike(target,{type,damage});
+    effects.push({prism:true,x:t.x,y:t.y,x2:target.x,y2:target.y,time:.13,color:types.prism.color});
+    if(t.split){
+      const nearby=enemies.filter(e=>e!==target&&e.hp>0&&Math.hypot(e.x-target.x,e.y-target.y)<=t.splitReach)
+        .sort((a,b)=>Math.hypot(a.x-target.x,a.y-target.y)-Math.hypot(b.x-target.x,b.y-target.y));
+      for(const e of nearby.slice(0,t.split)){
+        strike(e,{type,damage:damage*t.splitPower});
+        effects.push({prism:true,x:target.x,y:target.y,x2:e.x,y2:e.y,time:.1,color:'#c38ad4'});
+      }
+    }
+    return;
+  }
   if(type==='pulse'){
     areaStrike(t,t.x,t.y,t.range);
     effects.push({x:t.x,y:t.y,r:t.range,time:.25,color:'#c7c1ff'});return;
@@ -299,28 +357,39 @@ function fire(t,target){
   }
   effects.push({x:t.x+Math.cos(t.angle)*20,y:t.y+Math.sin(t.angle)*20,flash:true,time:.08,color:'#ffe7a0'});
   const distance=t.blast?Math.hypot(target.x-t.x,target.y-t.y):t.range;
-  const speed={sniper:2100,cannon:1650,gun:1440,minigun:1440,shotgun:1320,mortar:400,rocket:600}[type]||960;
+  const speed={disc:385,sniper:2100,cannon:1650,gun:1440,minigun:1440,shotgun:1320,mortar:400,rocket:600}[type]||960;
   for(let i=0;i<t.shots;i++){
     const spread=type==='shotgun'?(i/(t.shots-1)-.5)*.68:0;
     const angle=t.angle+spread;
-    projectiles.push({x:t.x,y:t.y,dx:Math.cos(angle),dy:Math.sin(angle),speed,remaining:distance,total:distance,
+    const p={x:t.x,y:t.y,dx:Math.cos(angle),dy:Math.sin(angle),speed,remaining:distance,total:distance,
       damage:t.damage,type,pierce:t.pierce,ignoreArmor:t.ignoreArmor,radius:t.blast,areaCap:t.areaCap,slow:t.slow,stun:t.stun,
-      push:t.push,dot:t.dot,duration:t.duration,hit:[]});
+      push:t.push,dot:t.dot,duration:t.duration,hit:[]};
+    if(type==='disc'){p.passLimit=t.pierce;p.returnPower=t.returnPower;}
+    projectiles.push(p);
   }
 }
-function moveProjectiles(dt){
- for(let p of projectiles){
-  let distance=Math.min(p.speed*dt,p.remaining),startX=p.x,startY=p.y;
-  let hits=(p.type==='mortar'?[]:enemies).filter(e=>e.hp>0&&!p.hit.includes(e)).map(e=>{
+function advanceProjectile(p,travel){
+  let distance=Math.min(travel,p.remaining),startX=p.x,startY=p.y;
+  let hits=(p.type==='mortar'||p.pierce===0?[]:enemies).filter(e=>e.hp>0&&!p.hit.includes(e)).map(e=>{
    let along=(e.x-startX)*p.dx+(e.y-startY)*p.dy;
    let side=Math.abs((e.x-startX)*p.dy-(e.y-startY)*p.dx);
    let entry=along-Math.sqrt(Math.max(0,e.r*e.r-side*side));
    return {enemy:e,entry,side,along};
   }).filter(h=>h.side<=h.enemy.r&&h.along+h.enemy.r>=0&&h.entry<=distance).sort((a,b)=>a.entry-b.entry);
-  for(let h of hits){if(p.type==='rocket'||p.type==='mortar'){distance=Math.max(0,h.entry);p.pierce=0;break}strike(h.enemy,p);p.hit.push(h.enemy);p.pierce--;if(p.pierce<=0){distance=Math.max(0,h.entry);break}}
+  for(let h of hits){if(p.type==='rocket'||p.type==='mortar'){distance=Math.max(0,h.entry);p.pierce=0;break}strike(h.enemy,p);p.hit.push(h.enemy);p.pierce--;if(p.pierce<=0){if(p.type!=='disc')distance=Math.max(0,h.entry);break}}
   p.x+=p.dx*distance;p.y+=p.dy*distance;p.remaining-=distance;if((p.type==='rocket'||p.type==='mortar')&&(p.pierce<=0||p.remaining<=0)){areaStrike(p,p.x,p.y,p.radius);effects.push({x:p.x,y:p.y,r:p.radius,time:.25,color:'#f6a357'})}
+}
+function moveProjectiles(dt){
+ for(const p of projectiles){
+   const travel=p.speed*dt,outward=p.remaining;
+   advanceProjectile(p,travel);
+   if(p.type==='disc'&&!p.returning&&p.remaining<=0){
+     p.returning=true;p.dx=-p.dx;p.dy=-p.dy;p.remaining=p.total;
+     p.hit=[];p.pierce=p.passLimit;p.damage*=p.returnPower;
+     if(travel>outward)advanceProjectile(p,travel-outward);
+   }
  }
- projectiles=projectiles.filter(p=>p.remaining>0&&p.pierce>0);
+ projectiles=projectiles.filter(p=>p.remaining>0&&(p.pierce>0||p.type==='disc'));
 }
 function update(dt){if(!started||over)return;if(running)spawnPack(dt);let breached=false;for(let e of enemies){
  e.pulseRecovery=Math.max(0,(e.pulseRecovery||0)-dt);e.stun-=dt;if(e.poison>0){e.hp-=e.poisonDamage*dt;e.poison-=dt}e.slow=(e.slow||0)-dt;
@@ -379,7 +448,10 @@ for(let pass=0;pass<2;pass++){
   buckets.get(key).push(e);
  }
 }
-for(let t of towers){if(t===aiming)continue;t.cool-=dt;if(t.recoil)t.recoil=Math.max(0,t.recoil-24*dt);if(t.plumeTime>0)t.plumeTime-=dt;if(t.type==='barracks'){if(running&&t.cool<=0&&soldiers.filter(a=>a.home===t).length<t.cap){let rally=nearestRoad(t.x,t.y),dx=t.x-rally.x,dy=t.y-rally.y,d=Math.hypot(dx,dy)||1;soldiers.push({home:t,x:rally.x+dx/d*12,y:rally.y+dy/d*12,hp:t.soldierHp,maxHp:t.soldierHp,cool:0,rally});t.cool=t.rate;if(selected===t)ui()}continue}let target=enemies.filter(e=>{let angle=Math.atan2(e.y-t.y,e.x-t.x),difference=Math.atan2(Math.sin(angle-t.facing),Math.cos(angle-t.facing));return e.hp>0&&Math.hypot(e.x-t.x,e.y-t.y)<t.range&&(omnidirectional.includes(t.type)||Math.abs(difference)<=Math.PI/4)}).sort((a,b)=>b.x-a.x)[0];if(target&&t.cool<=0){fire(t,target);t.cool=t.rate}}for(let a of soldiers){a.cool-=dt;if(a.hp>0&&a.home.regen)a.hp=Math.min(a.maxHp,a.hp+a.home.regen*dt);let target=enemies.filter(e=>e.hp>0&&Math.hypot(e.x-a.home.x,e.y-a.home.y)<a.home.range+60).sort((x,y)=>Math.hypot(x.x-a.x,x.y-a.y)-Math.hypot(y.x-a.x,y.y-a.y))[0];if(target){let dx=target.x-a.x,dy=target.y-a.y,d=Math.hypot(dx,dy);a.angle=Math.atan2(dy,dx);if(d>85){a.x+=dx/d*45*dt;a.y+=dy/d*45*dt}else if(a.cool<=0){projectiles.push({x:a.x,y:a.y,dx:dx/d,dy:dy/d,speed:1200,remaining:100,damage:a.home.damage,type:'soldier',pierce:1,hit:[]});a.cool=a.home.rifleRate}}else{let dx=a.rally.x-a.x,dy=a.rally.y-a.y,d=Math.hypot(dx,dy);if(d>5){a.x+=dx/d*40*dt;a.y+=dy/d*40*dt}}}let previousSoldierCount=soldiers.length;soldiers=soldiers.filter(a=>a.hp>0);if(selected&&selected.type==='barracks'&&soldiers.length!==previousSoldierCount)ui();for(let i=0;i<soldiers.length;i++)for(let j=i+1;j<soldiers.length;j++){let a=soldiers[i],b=soldiers[j],dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy);if(d<16){if(d<.01){dx=1;dy=0;d=1}let shift=(16-d)/2;a.x-=dx/d*shift;a.y-=dy/d*shift;b.x+=dx/d*shift;b.y+=dy/d*shift}}moveProjectiles(dt);let dead=enemies.filter(e=>e.hp<=0&&!e.escaped);if(dead.length){money+=dead.reduce((sum,e)=>sum+e.body.bounty,0);ui()}enemies=enemies.filter(e=>e.hp>0);effects.forEach(e=>e.time-=dt);effects=effects.filter(e=>e.time>0);if(running&&!waveQueue.length&&!enemies.length){running=false;soldiers=[];money+=30+wave*5;status.textContent='Wave cleared · supplies delivered';ui()}}
+for(let t of towers){if(t===aiming)continue;t.cool-=dt;if(t.recoil)t.recoil=Math.max(0,t.recoil-24*dt);if(t.plumeTime>0)t.plumeTime-=dt;if(t.type==='barracks'){if(running&&t.cool<=0&&soldiers.filter(a=>a.home===t).length<t.cap){let rally=nearestRoad(t.x,t.y),dx=t.x-rally.x,dy=t.y-rally.y,d=Math.hypot(dx,dy)||1;soldiers.push({home:t,x:rally.x+dx/d*12,y:rally.y+dy/d*12,hp:t.soldierHp,maxHp:t.soldierHp,cool:0,rally});t.cool=t.rate;if(selected===t)ui()}continue}const candidates=enemies.filter(e=>{let angle=Math.atan2(e.y-t.y,e.x-t.x),difference=Math.atan2(Math.sin(angle-t.facing),Math.cos(angle-t.facing));return e.hp>0&&Math.hypot(e.x-t.x,e.y-t.y)<t.range&&(omnidirectional.includes(t.type)||Math.abs(difference)<=Math.PI/4)});
+ const target=t.locked&&candidates.includes(t.locked)?t.locked:candidates.sort((a,b)=>b.x-a.x)[0];
+ if(t.type==='prism'&&target!==t.locked){t.locked=null;t.focus=1;}
+ if(target&&t.cool<=0){fire(t,target);t.cool=t.rate}}for(let a of soldiers){a.cool-=dt;if(a.hp>0&&a.home.regen)a.hp=Math.min(a.maxHp,a.hp+a.home.regen*dt);let target=enemies.filter(e=>e.hp>0&&Math.hypot(e.x-a.home.x,e.y-a.home.y)<a.home.range+60).sort((x,y)=>Math.hypot(x.x-a.x,x.y-a.y)-Math.hypot(y.x-a.x,y.y-a.y))[0];if(target){let dx=target.x-a.x,dy=target.y-a.y,d=Math.hypot(dx,dy);a.angle=Math.atan2(dy,dx);if(d>85){a.x+=dx/d*45*dt;a.y+=dy/d*45*dt}else if(a.cool<=0){projectiles.push({x:a.x,y:a.y,dx:dx/d,dy:dy/d,speed:1200,remaining:100,damage:a.home.damage,type:'soldier',pierce:1,hit:[]});a.cool=a.home.rifleRate}}else{let dx=a.rally.x-a.x,dy=a.rally.y-a.y,d=Math.hypot(dx,dy);if(d>5){a.x+=dx/d*40*dt;a.y+=dy/d*40*dt}}}let previousSoldierCount=soldiers.length;soldiers=soldiers.filter(a=>a.hp>0);if(selected&&selected.type==='barracks'&&soldiers.length!==previousSoldierCount)ui();for(let i=0;i<soldiers.length;i++)for(let j=i+1;j<soldiers.length;j++){let a=soldiers[i],b=soldiers[j],dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy);if(d<16){if(d<.01){dx=1;dy=0;d=1}let shift=(16-d)/2;a.x-=dx/d*shift;a.y-=dy/d*shift;b.x+=dx/d*shift;b.y+=dy/d*shift}}moveProjectiles(dt);let dead=enemies.filter(e=>e.hp<=0&&!e.escaped);if(dead.length){money+=dead.reduce((sum,e)=>sum+e.body.bounty,0);ui()}enemies=enemies.filter(e=>e.hp>0);effects.forEach(e=>e.time-=dt);effects=effects.filter(e=>e.time>0);if(running&&!waveQueue.length&&!enemies.length){running=false;soldiers=[];money+=45+wave*7;status.textContent='Wave cleared · supplies delivered';ui()}}
 function makeMap() {
   const seed = 372 + Object.values(maps).indexOf(activeMap) * 101;
   return FieldArt.terrain(activeMap, activeMap.roads, segments, pathDistance, seed, waterShape, canvas.width/activeMap.width);
@@ -494,6 +566,7 @@ for(const [key,map] of Object.entries(maps))mapSelect.add(new Option(map.name,ke
 function previewZone(){
   const map=maps[mapSelect.value];
   document.querySelector('#mapSummary').textContent=map.briefing;
+  document.querySelector('#mapEconomy').textContent=map.startingSupplies+' starting supplies · '+waveSize(1,map)+' zombies in wave 1';
   document.querySelector('#mapProfile').textContent=map.size+' · '+map.paths.length+(map.links?.length?' linked approaches':map.paths.length===1?' route':' routes');
   const diagram=document.querySelector('#mapDiagram'),g=diagram.getContext('2d');
   g.clearRect(0,0,diagram.width,diagram.height);
@@ -507,6 +580,7 @@ mapSelect.addEventListener('change',previewZone);
 previewZone();
 document.querySelector('#play').onclick=()=>{
   buildRoutes(maps[mapSelect.value]);
+  money=activeMap.startingSupplies;ui();
   waterShape=FieldArt.waterways(activeMap);
   const scale=Math.min(2,3072/activeMap.width);
   canvas.width=Math.round(activeMap.width*scale);canvas.height=Math.round(activeMap.height*scale);

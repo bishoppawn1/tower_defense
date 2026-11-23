@@ -49,6 +49,14 @@ const upgrades = {
     [['Wider shells · blast radius 37',{blast:37}],['Heavy shells · +20% damage',{power:1.2}],['Barrage · 35% shorter reload',{reload:.65}],['Siege shells · radius 46, eight targets and +70% damage',{blast:46,areaCap:8,power:1.7}],['Earthbreaker · radius 76, twelve targets and fivefold shell damage',{blast:76,areaCap:12,power:5}]],
     [['Long tube · +15% range',{reach:1.15}],['Concussion · slows for 1.5s',{slow:1.5}],['Pressure wave · pushes blast survivors',{push:105}],['Flashbang · stuns the blast zone for 2s',{stun:2}],['Aftershock · 5s area stun and triple fire rate',{stun:5,reload:1/3}]]
   ],
+  disc: [
+    [['Honed edge · +20% damage',{power:1.2}],['Wider blade · hits four targets per pass',{pierce:4}],['Serrations · slows cut targets for 1s',{slow:1}],['Mill wheel · seven targets per pass and +60% damage',{pierce:7,power:1.6}],['Harvest wheel · eighteen targets per pass and quadruple damage',{pierce:18,power:4}]],
+    [['Tighter spool · 15% shorter reload',{reload:.85}],['Long throw · +20% range',{reach:1.2}],['Backspin · return cuts deal double damage',{returnPower:2}],['Counterweight · +25% range and 35% shorter reload',{reach:1.25,reload:.65}],['Reaper clutch · sixfold return damage and double fire rate',{returnPower:6,reload:.5}]]
+  ],
+  prism: [
+    [['Cut glass · +15% beam damage',{power:1.15}],['Focal mount · faster buildup per repeated hit',{focusStep:.5}],['Ruby core · focus can reach fourfold damage',{focusMax:4}],['Annealed core · +60% damage and faster focus',{power:1.6,focusStep:.85}],['Solar lens · twelvefold focus ceiling and double fire rate',{focusMax:12,reload:.5}]],
+    [['Optical bench · +15% range',{reach:1.15}],['Quick shutter · 15% shorter pulse interval',{reload:.85}],['Beam splitter · one nearby enemy takes half beam damage',{split:1}],['Diffraction fan · two secondary targets within 80 units',{split:2,splitReach:80}],['Aurora array · six secondary targets take full beam damage',{split:6,splitPower:1}]]
+  ],
   pulse: [
     [['Amplifier · +15% damage',{power:1.15}],['Quick charge · 15% shorter recharge',{reload:.85}],['Overload · +60% damage',{power:1.6}],['Cascade · halves recharge time',{reload:.5}],['Resonance engine · fivefold damage and double pulse rate',{power:5,reload:.5}]],
     [['Broad field · +15% range, hits six targets',{reach:1.15,areaCap:6}],['Disruptor · 10% chance to stun for 0.45s',{stunChance:.10,stun:.45}],['Repulsor · stronger shove',{push:48}],['Static field · 12% stun for 0.65s and a brief slow',{stunChance:.12,stun:.65,slow:.75}],['Exclusion field · double radius, ten targets, stronger shove, 15% stun for 1s',{reach:2,areaCap:10,push:65,stunChance:.15,stun:1}]]
@@ -62,9 +70,11 @@ const trackNames={
   flame:['Combustion chamber','Projector nozzle'],frost:['Cold core','Shard array'],
   cannon:['Siege battery','Penetrator rail'],venom:['Toxin vat','Dispersal rig'],
   minigun:['Rotary drive','Core ammunition'],mortar:['Bombardment','Shock shells'],
+  disc:['Cutting wheel','Return drive'],prism:['Focus lens','Splitter optics'],
   pulse:['Resonator','Repulsor field']
 };
 const towerDefaults = {
+  disc:{pierce:3,returnPower:1},prism:{focus:1,focusStep:.3,focusMax:2.2,split:0,splitReach:55,splitPower:.5},
   sniper:{pierce:2}, shotgun:{shots:7}, rocket:{blast:27,areaCap:4}, mortar:{blast:32,areaCap:5},
   lightning:{chains:4,jump:90,stun:.5}, pulse:{areaCap:5,push:35,stun:.25,stunChance:.08},
   frost:{slow:2}, flame:{duration:2,dot:4,pierce:3,heatRetention:.5}, venom:{duration:2,dot:4},
