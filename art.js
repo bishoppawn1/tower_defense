@@ -561,10 +561,10 @@ const FieldArt = (() => {
     }
     return canvas;
   }
-  function zombie(kind,skin,step,tier=1,mark=null){
+  function zombie(kind,skin,step,tier=1){
     // Trace the early walker's wide brow, torn shoulders and two forward hands
     // in continuous curves. Each arm has its own sleeve, wrist and finger line.
-    const {canvas,g}=surface(38,30,6);g.translate(15,15);
+    const {canvas,g}=surface(44,44,6);g.translate(22,22);
     function piece(path,fill,edge='#293427',weight=.7){
       const outline=new Path2D(path);
       g.fillStyle=fill;g.fill(outline);
@@ -608,14 +608,35 @@ const FieldArt = (() => {
       piece('M-3.8 -3.3 Q-2 -6.8 1.4 -6.2 L3.5 -5.6 3.3 -3.7 2.7 -1.9 2.9 1.9 3.6 4.1 2.2 5.5 Q-1 6.1 -3.6 3.2 Z','#6e7a71');
       line(g,[[-2.7,-3],[0,-4.9],[2.3,-4.6]],'#a5af96',.9);
     }
-    if(mark){
-      // Rank insignia sits across the back. Skin, hands and resistance colors
-      // stay readable even on an armored brute.
-      piece('M-8 -4.8 L-5 -6.3 -2.8 -4.7 -3.2 4.6 -6 6 -8 4.5 Z','#344448');
-      for(let i=0;i<tier-1;i++){
-        const y=-3.5+i*2.15;
-        line(g,[[-7.2,y+.7],[-5.9,y-.3],[-4.3,y+.7]],mark,1.2);
+    if(tier===1)return canvas;
+    // Keep the face, hands and central jacket exposed. Paired growths sit
+    // outside the torso so their silhouettes survive rotation and downsampling.
+    function ridge(outline,facet,base,light){
+      piece(outline,base,'#302c31',1.1);
+      piece(facet,light,null);
+    }
+    const sides=tier===2?1:2;
+    for(let side=0;side<sides;side++){
+      g.save();if(side)g.scale(1,-1);
+      if(tier===2){
+        ridge('M-7 -4 Q-10 -7 -8 -10 L-5 -14 -1 -13 2 -10 1 -7 -2 -5 Z',
+          'M-7.7 -9.5 L-4.8 -13 -1.4 -12.3 .6 -10 -3.2 -9.6 -6 -7.5 Z','#84928f','#f0eee0');
+      }else if(tier===3){
+        ridge('M-9 -3.5 L-12 -8.8 -10 -12.6 -4 -14 2 -12 4 -8 1 -5 -5 -4 Z',
+          'M-10.2 -9.6 L-9 -12 -4 -13 1.5 -11.5 2.8 -9.4 -3 -10.3 -8.4 -8 Z','#98513b','#ed9e69');
+      }else if(tier===4){
+        ridge('M-8 -4 Q-12 -6 -12 -10 Q-10 -15 -4 -18 Q-5 -13 1 -12 L4 -10 2 -6 -3 -4 Z',
+          'M-10.7 -10 Q-9 -14 -5.6 -15.9 Q-6 -12.1 -3.4 -11 L1.5 -10.2 -2 -9.3 -7 -9.4 Z','#9d773d','#ffe2a0');
+      }else{
+        ridge('M-10 -3 L-17 -8 -12 -8.5 -13 -16 -7 -12.5 -3 -18.3 -.5 -12.8 3.5 -11.4 4.4 -7 1 -4.8 -4 -4 Z',
+          'M-14.4 -7.7 L-10.3 -7 -11.8 -13.7 -7.4 -10.4 -3.2 -15.8 -2.2 -11.6 1.8 -10.5 -2.9 -9.6 -7.8 -9.1 -9.5 -5.4 Z','#714066','#f5add4');
+        piece('M-8.5 -7.5 L-5.6 -10.7 -2.4 -10.4 -.9 -8.4 -4.2 -7.1 Z','#ba6f9b',null);
       }
+      g.restore();
+    }
+    if(tier===5){
+      ridge('M-8 -4 L-12 -3.5 -18.1 0 -12 3.5 -8 4 -6 0 Z',
+        'M-16.1 0 L-10.8 -2.4 -8.5 -2.4 -10.2 0 Z','#693e62','#f6b9db');
     }
     return canvas;
   }

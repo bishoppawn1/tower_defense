@@ -6,8 +6,8 @@ const enemyBodies={
 };
 // Health belongs to the tier and body. Wave number only selects a roster.
 const enemyTiers=[
-  {hp:16,mark:null}, {hp:40,mark:'#d2dde0'}, {hp:90,mark:'#d69a68'},
-  {hp:200,mark:'#f1cf73'}, {hp:450,mark:'#e4a3cb'}
+  {hp:16}, {hp:40,feature:'One pale shoulder'}, {hp:90,feature:'Two copper shoulder plates'},
+  {hp:200,feature:'Twin golden horns'}, {hp:450,feature:'A crown of violet spines'}
 ];
 const tierWaves=[
   {from:1,shares:[100]},
@@ -65,7 +65,10 @@ function spawnPack(dt){
     enemies.push({x:-20,y,vx:body.speed,vy:0,bias:Math.random()<.5?-1:1,
       r:body.radius,hp,max:hp,kind,tier,speed:body.speed,stun:0,phase:Math.random()*6,body});
     announce(kind);
-    if(tier>1)announce('tier-'+tier,'Tier '+tier+' spotted · Walkers of this tier have '+enemyTiers[tier-1].hp+' HP.');
+    if(tier>1){
+      const rank=enemyTiers[tier-1];
+      announce('tier-'+tier,'Tier '+tier+' spotted · '+rank.feature+' · '+rank.hp+' walker HP.');
+    }
     waveQueue.pop();made++;
   }
   spawn=made===pack?(wave===1?.68:wave<5?.66:.46):.08;

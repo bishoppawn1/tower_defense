@@ -163,7 +163,7 @@ const enemyNames={normal:'Walker',runner:'Runner',brute:'Brute',armor:'Armored',
 function zombieFrames(kind,tier){
   const key=kind+'-'+tier;
   if(!zombieSprites.has(key)){
-    const frame=step=>FieldArt.zombie(kind,skinColors[kind],step,tier,enemyTiers[tier-1].mark);
+    const frame=step=>FieldArt.zombie(kind,skinColors[kind],step,tier);
     const still=frame(0);
     zombieSprites.set(key,kind==='runner'?[frame(-1),still,frame(1)]:[still,still,still]);
   }
@@ -371,14 +371,15 @@ function draw() {
   for (const e of enemies) {
     const size=e.r/9;
     const frame=e.stun>0?1:Math.round(Math.sin(e.phase))+1;
-    drawUnit(zombieFrames(e.kind,e.tier)[frame],e,-15*size,-15*size,38*size,30*size);
+    drawUnit(zombieFrames(e.kind,e.tier)[frame],e,-22*size,-22*size,44*size,44*size);
     if(!building&&!aiming){
       const d=(mouse.x-e.x)**2+(mouse.y-e.y)**2;
       if(d<(e.r+4)**2 && d<nearest){inspected=e;nearest=d;}
     }
     if(e.hp<e.max){
-      ctx.fillStyle='#253533'; ctx.fillRect(e.x-9,e.y-e.r-5,18,2.5);
-      ctx.fillStyle='#f4ce93'; ctx.fillRect(e.x-9,e.y-e.r-5,18*Math.max(0,e.hp/e.max),2.5);
+      const barY=e.y-(e.tier>=4?20:e.tier>=2?16:13)*size-3;
+      ctx.fillStyle='#253533'; ctx.fillRect(e.x-9,barY,18,2.5);
+      ctx.fillStyle='#f4ce93'; ctx.fillRect(e.x-9,barY,18*Math.max(0,e.hp/e.max),2.5);
     }
   }
   if(inspected){
