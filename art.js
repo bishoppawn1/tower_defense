@@ -99,11 +99,12 @@ const FieldArt = (() => {
     for(let i=0;i<9;i++){const x=1010+random()*126,y=167+random()*30;line(g,[[x-4,y-1],[x,y+1.4],[x+3,y-2]],'#586b62',1);}
   }
   const terrainColors = {
-    Meadow: {ground:['#a8b483','#93a67a','#7c986e'],road:['#c3aa82','#decca2','#c2ae84'],edge:'#979772'},
-    Forest: {ground:['#789885','#638675','#41685f'],road:['#ae9771','#c9b38a','#aa9574'],edge:'#77846b'},
-    Quarry: {ground:['#b28166','#be9573','#986c59'],road:['#dac3a4','#e4c9a1','#c7a582'],edge:'#957259'},
-    'Ruined town': {ground:['#939387','#858c82','#6e7d76'],road:['#4e585b','#646c6c','#545f62'],edge:'#a4a69a'},
-    Wetlands: {ground:['#94a780','#7d9d83','#637f70'],road:['#b8aa86','#d0c19a','#bcae8a'],edge:'#648073'}
+    Orchard:{ground:['#8a994f','#aeb470','#788b58'],road:['#bf925f','#e9c990','#c6a472'],edge:'#8d8255'},
+    Glacier:{ground:['#8fabb8','#b2cad0','#7e9eac'],road:['#cddde1','#e1e9e6','#c4d2d8'],edge:'#829ba8'},
+    Foundry:{ground:['#68564f','#936b52','#4f5350'],road:['#ac8e75','#ccac89','#b99a83'],edge:'#705f50'},
+    Freight:{ground:['#364551','#52616b','#394951'],road:['#777675','#9a9282','#777979'],edge:'#64757c'},
+    Atoll:{ground:['#88a785','#b8bd8a','#689b82'],road:['#d6ba8b','#eadab0','#c6b186'],edge:'#968d74'}
+
   };
   function ruins(g,x,y,rx,ry,random){
     g.save();g.translate(x,y);g.scale(random()>.5?1:-1,random()>.5?1:-1);
@@ -188,36 +189,15 @@ const FieldArt = (() => {
     }
   }
   function waterways(map){
+    if(!map.water&&!map.islands)return null;
     const water=new Path2D();
-    if(map.setting==='Forest'){
-      water.moveTo(75,-10);water.bezierCurveTo(65,110,385,87,322,194);
-      water.bezierCurveTo(252,315,586,305,568,409);water.bezierCurveTo(550,525,770,520,715,700);
-      water.lineTo(746,700);water.bezierCurveTo(803,522,590,510,599,408);
-      water.bezierCurveTo(612,287,283,304,348,200);water.bezierCurveTo(410,78,124,83,109,-10);
-      water.closePath();
-      const creek=new Path2D();
-      creek.addPath(water,new DOMMatrix().scale(map.width/980,map.height/680));
-      return creek;
-    }
-    if(map.setting!=='Wetlands')return null;
-    // A deep tidal channel with a western creek and an eastern backwater.
-    const banks=[
-      [[.14,-.08],[.21,.05],[.18,.19],[.21,.29],[.35,.40],[.44,.43],[.52,.53],[.49,.65],[.58,.74],[.69,.82],[.73,1.07],
-       [.65,1.09],[.63,.88],[.54,.81],[.43,.73],[.40,.66],[.44,.55],[.40,.48],[.32,.46],[.18,.34],[.13,.20],[.15,.085],[.08,-.04]],
-      [[.38,.43],[.30,.48],[.24,.57],[.17,.62],[.10,.67],[-.05,.65],[-.06,.59],[.10,.62],[.19,.56],[.26,.49],[.35,.42]],
-      [[.53,.72],[.61,.66],[.70,.65],[.76,.54],[.82,.54],[.88,.64],[.99,.67],[1.04,.63],[1.06,.70],[.97,.73],[.84,.67],[.80,.58],[.77,.62],[.72,.70],[.64,.71],[.57,.76]]
-    ];
-    for(const polygon of banks){
-      const points=polygon.map(([x,y])=>[x*map.width,y*map.height]);
-      const last=points.at(-1),first=points[0];
-      water.moveTo((last[0]+first[0])/2,(last[1]+first[1])/2);
-      points.forEach(([x,y],i)=>{const next=points[(i+1)%points.length];water.quadraticCurveTo(x,y,(x+next[0])/2,(y+next[1])/2);});
-      water.closePath();
-    }
-    for(const [cx,cy,rx,ry] of map.landmarks){
+    // Counter-wound island rings cut dry land out of the open sea. The same
+    // path drives shoreline paint, bridge decks and pontoon placement.
+    if(map.islands)water.rect(-1000,-1000,map.width+2000,map.height+2000);
+    for(const [cx,cy,rx,ry] of map.islands||map.water){
       const pool=new Path2D();
       for(let i=0;i<80;i++){
-        const a=i*tau/80,r=.92+.06*Math.cos(3*a+cx)+.04*Math.sin(5*a+cy);
+        const a=(map.islands?-1:1)*i*tau/80,r=.92+.06*Math.cos(3*a+cx)+.04*Math.sin(5*a+cy);
         const x=cx+rx*r*Math.cos(a),y=cy+ry*r*Math.sin(a);
         if(i)pool.lineTo(x,y);else pool.moveTo(x,y);
       }
@@ -236,7 +216,7 @@ const FieldArt = (() => {
   function terrain(map, roads, segments, distance, seed, water, scale) {
     const {width,height,setting}=map, {canvas,g}=surface(width,height,scale),random=seeded(seed);
     const palette=terrainColors[setting],exit=map.exit;
-    const urban=setting==='Ruined town',quarry=setting==='Quarry',marsh=setting==='Wetlands';
+    const urban=setting==='Freight',quarry=setting==='Foundry',marsh=setting==='Atoll';
     g.fillStyle=gradient(g,0,0,width,height,...palette.ground);g.fillRect(0,0,width,height);
     if(urban){
       for(let y=-20;y<height;y+=85)for(let x=-38;x<width;x+=115){
@@ -268,13 +248,23 @@ const FieldArt = (() => {
     }
     if(water){
       g.save();
-      g.strokeStyle='#b9c299';g.lineWidth=12;g.stroke(water);
-      g.strokeStyle='#829b7b';g.lineWidth=5;g.stroke(water);
-      g.fillStyle=gradient(g,0,0,width,height,'#577f76','#457879','#315f68');g.fill(water);
+      g.strokeStyle=marsh?'#e1cc9c':'#d0dfe1';g.lineWidth=marsh?33:12;g.stroke(water);
+      g.strokeStyle=marsh?'#b9d4b6':'#91b6c5';g.lineWidth=marsh?13:5;g.stroke(water);
+      g.fillStyle=gradient(g,0,0,width,height,...(marsh?['#55a8a2','#398c91','#306b7b']:['#7bb8c6','#76a8be','#56869e']));g.fill(water);
       g.clip(water);
+      if(marsh){
+        g.strokeStyle='#87c7b5';g.lineWidth=38;g.stroke(water);
+        g.strokeStyle='#a5dbc7';g.lineWidth=6;g.stroke(water);
+      }
       for(let i=0;i<1700;i++){
         const x=random()*width,y=random()*height,length=5+random()*30;
         line(g,[[x,y],[x+length*.45,y-1.4],[x+length,y-1]],i%4?'#a3c7b644':'#cce1c984',1.25);
+      }
+      if(setting==='Glacier'){
+        for(let i=0;i<270;i++){
+          const x=random()*width,y=random()*height,d=8+random()*38;
+          shape(g,[[x-d,y],[x-d*.4,y-d*.45],[x+d*.7,y-d*.35],[x+d,y+d*.1],[x,y+d*.32]],'#c1e0e4b8','#9cc5d0');
+        }
       }
       g.restore();
     }
@@ -300,12 +290,12 @@ const FieldArt = (() => {
     }
     if(water){
       g.save();g.clip(water);g.clip(roadbed);
-      g.fillStyle='#9f9175';g.fillRect(0,0,width,height);
+      g.fillStyle=marsh?'#d9c49d':'#9f9175';g.fillRect(0,0,width,height);
       for(const {a,b,ux,uy,length,r0,r1} of segments){
-        const steps=Math.max(1,Math.round(length/6));
+        const steps=Math.max(1,Math.round(length/(marsh?21:6)));
         for(let i=0;i<steps;i++){
           const t=(i+.5)/steps,x=a.x+(b.x-a.x)*t,y=a.y+(b.y-a.y)*t,r=r0+(r1-r0)*t;
-          line(g,[[x-uy*r,y+ux*r],[x+uy*r,y-ux*r]],'#756f5d',1.3);
+          line(g,[[x-uy*r,y+ux*r],[x+uy*r,y-ux*r]],marsh?'#91846a65':'#756f5d',1.3);
         }
       }
       g.restore();
@@ -319,7 +309,7 @@ const FieldArt = (() => {
       }
     }
     const groves=[];
-    const clumps={Meadow:32,Forest:170,Quarry:58,Wetlands:155,'Ruined town':32};
+    const clumps={Orchard:8,Glacier:72,Foundry:34,Atoll:95,Freight:10};
     for(let i=0;i<clumps[setting];i++){
       const cx=random()*width,cy=random()*height;
       for(let j=0;j<2+random()*5;j++){
@@ -331,15 +321,20 @@ const FieldArt = (() => {
     for(const [i,{x,y,h}] of groves.entries()){
       oval(g,x+h*.13,y-1,h*.31,h*.10,'#344c453d',-.18);
       if(marsh){
-        for(let k=-1;k<=1;k++){
-          line(g,[[x+k*2,y],[x+k*4-1,y-h*.40]],'#57745d',1.3);
-          oval(g,x+k*4-1,y-h*.4,1.2,2.6,'#8a7955',-.2);
+        const crown=y-h*.55;
+        line(g,[[x+2,y],[x-1,y-h*.3],[x,crown]],'#826d50',2.8);
+        for(let leaf=0;leaf<6;leaf++){
+          const angle=leaf*tau/6+i,dx=Math.cos(angle)*h*.48,dy=Math.sin(angle)*h*.25;
+          shape(g,[[x,crown],[x+dx*.52-dy*.21,crown+dy*.48-3],[x+dx,crown+dy+2],[x+dx*.55+dy*.20,crown+dy*.55]],leaf%2?'#508878':'#659c77');
         }
+      }else if(setting==='Glacier'){
+        pine(g,x,y,h,'#516e77','#748e96');
+        shape(g,[[x-h*.21,y-h*.60],[x,y-h],[x+h*.18,y-h*.64],[x+h*.04,y-h*.70]],'#dbe6e5');
       }else if(quarry || i%7===0){
 
         shape(g,[[x-8,y],[x-7,y-5],[x-1,y-9],[x+6,y-6],[x+9,y-1],[x+4,y+2]],quarry?'#9b7962':'#859992');
         shape(g,[[x-7,y-5],[x-1,y-9],[x+6,y-6],[x+1,y-4]],quarry?'#e3c59d':'#bac4ae');
-      }else if(setting==='Meadow'||urban){
+      }else if(setting==='Orchard'||urban){
         if(i%3===0){
           oval(g,x,y-h*.17,h*.39,h*.29,'#627e58');
           oval(g,x-h*.08,y-h*.25,h*.31,h*.21,'#8ba56c');
@@ -350,26 +345,35 @@ const FieldArt = (() => {
       if(urban)depot(g,x,y,rx,ry,index,random);
       else if(quarry){
         quarryPit(g,x,y,rx,ry,random);
+        oval(g,x,y,rx*.44,ry*.64,'#383b39');oval(g,x,y-3,rx*.31,ry*.35,'#d37242');
+        oval(g,x-2,y-4,rx*.20,ry*.19,'#f2b46a');
         if(index%2===0)workCrane(g,x-rx*.1,y+ry*.45,.85);
       }
     }
+    if(setting==='Orchard'){
+      // Working orchards have planting rows, with grass headlands between blocks.
+      for(let row=0;row<height/97;row++)for(let col=0;col<width/85;col++){
+        if(col%6===5||row%5===4)continue;
+        const x=35+col*85+row*14,y=46+row*97+col*3;
+        if(distance(x,y)<35||x>exit.x-60&&Math.abs(exit.y-y)<110)continue;
+        oval(g,x+6,y+6,19,10,'#525a3f55',-.28);
+        box(g,x-2,y-1,4,12,1,'#755d40');
+        oval(g,x,y-4,18,14,'#606f3e');oval(g,x-4,y-8,14,10,'#94a15a');
+        for(let n=0;n<5;n++)oval(g,x-12+random()*22,y-15+random()*14,2.4,2.7,'#e4b264');
+      }
+    }
     if(urban){
-      // Crosswalks and abandoned cars mark the inhabited street grid.
-      const junctions=new Set();
-      for(const {a,b,points} of roads){
-        if(a.outgoing.length>1){
-          const dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy);
-          g.save();g.translate(a.x+dx/d*56,a.y+dy/d*56);g.rotate(Math.atan2(dy,dx));
-          for(let y=-points[0].width*.35;y<points[0].width*.36;y+=7)box(g,-3,y,6,3,0,'#d7d4ad7a');
-          g.restore();
+      for(const {points,a} of roads){
+        for(const side of [-1,1]){
+          const track=points.map(p=>[p.x,p.y+side*9]);
+          line(g,track,'#3d464b',3.5);line(g,track,'#aca8a0',1.15);
         }
-        const p=points[Math.floor(points.length/2)];
-        if(b.x-a.x<80||junctions.has(p.x))continue;
-        junctions.add(p.x);
-        const side=random()<.5?-1:1;g.save();g.translate(p.x,p.y+side*p.width*.36);
-        g.rotate(Math.atan2(b.y-a.y,b.x-a.x)+random()*.25);
-        box(g,-9,-4,19,8,2.6,'#384644');box(g,-8,-4,17,6,2,['#9f7864','#8d998d','#a69f80'][Math.floor(random()*3)]);
-        box(g,-4,-3,8,4.7,1,'#526565');box(g,-2,-3,4,4.7,1,'#869187');g.restore();
+        for(const p of points)line(g,[[p.x,p.y-13],[p.x,p.y+13]],'#514a4580',2.1);
+        if(a.outgoing.length>1){
+          const p=points[Math.floor(points.length*.48)],y=p.y-p.width*.5-7;
+          box(g,p.x-3,y-11,6,14,2,'#29333b');
+          oval(g,p.x,y-8,2,2,'#ffba6f');
+        }
       }
     }
     // Fortified gate at the road exit with side towers and amber landing lights.

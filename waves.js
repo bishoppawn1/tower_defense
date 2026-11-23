@@ -73,7 +73,7 @@ function freeSpawnY(x,top,bottom,radius){
   }
   return null;
 }
-function spawnPack(dt){
+function spawnPack(dt,number=wave){
   if(!waveQueue.length)return;
   spawn-=dt;
   if(spawn>0)return;
@@ -97,5 +97,5 @@ function spawnPack(dt){
     }
     waveQueue.pop();made++;
   }
-  spawn=made?made*(wave===1?.22:wave<5?.085:.034)/activeMap.hordeScale:.04;
+  spawn=made?made*(number===1?.22:number<5?.085:.034)/activeMap.hordeScale:.04;
 }

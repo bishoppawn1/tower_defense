@@ -19,6 +19,7 @@
         <div class="launch">
           <select id="mapSelect" aria-describedby="mapSummary"></select>
           <button id="play">Start game <b aria-hidden="true">→</b></button>
+          <button id="practice" title="Test defenses with unlimited supplies">Sandbox</button>
         </div>
         <div class="map-intel">
           <canvas id="mapDiagram" width="244" height="132" aria-hidden="true"></canvas>
@@ -48,7 +49,29 @@
     <aside><div class="asidehead"><small>Armory</small><h2>Build defenses</h2></div><div id="shop"></div></aside>
   </main>
   <div id="upgradeDialog" class="tower-panel" hidden><button id="closeDetails" aria-label="Close upgrades">×</button><div id="details"></div></div>
+  <section id="lab" class="tower-panel" aria-labelledby="labTitle" hidden>
+    <div class="lab-title"><h2 id="labTitle">Wave lab</h2><button id="closeLab" aria-label="Close wave lab">×</button></div>
+    <p class="lab-note">Unlimited supplies and base health.</p>
+    <div class="lab-tabs" role="group" aria-label="Wave source">
+      <button id="presetTab" aria-pressed="true">Numbered wave</button>
+      <button id="customTab" aria-pressed="false">Custom wave</button>
+    </div>
+    <form id="labForm">
+      <div id="presetEditor"><label for="testNumber">Wave number</label>
+        <input id="testNumber" type="number" min="1" max="250" step="1" value="1" required>
+      </div>
+      <div id="customEditor" hidden>
+        <div id="testGroups"></div>
+        <button type="button" id="addGroup">+ Add group</button>
+      </div>
+      <p id="testCount" class="lab-note" aria-live="polite"></p>
+      <button id="launchTest" type="submit">Run test →</button>
+    </form>
+    <button id="stopTest" hidden>Stop current test</button>
+    <p id="testResult" class="lab-note" role="status"></p>
+    <button id="leaveLab">Return to map menu</button>
+  </section>
   <div id="notice" role="status" hidden></div>
-  <script src="art.js"></script><script src="maps.js"></script><script src="upgrades.js"></script><script src="waves.js"></script><script src="game.js"></script>
+  <script src="art.js"></script><script src="maps.js"></script><script src="upgrades.js"></script><script src="waves.js"></script><script src="game.js"></script><script src="sandbox.js"></script>
 </body>
 </html>

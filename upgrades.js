@@ -10,7 +10,7 @@ const upgrades = {
     [['Concussion · stuns for 0.25s',{stun:.25}],['Spotter · +15% range',{reach:1.15}],['Quick chamber · 35% shorter reload',{reload:.65}],['Crippling shot · stuns for 1.4s and bypasses armor',{stun:1.4,ignoreArmor:true}],['Deadeye array · double range, quadruple fire rate',{reach:2,reload:.25}]]
   ],
   shotgun: [
-    [['Wide load · nine pellets',{shots:9}],['Buckshot · +15% damage',{power:1.15}],['Drum magazine · 35% shorter reload',{reload:.65}],['Storm shot · seventeen pellets in the same cone',{shots:17}],['Wall of lead · 35 pellets, each deals triple damage',{shots:35,power:3}]],
+    [['Wide load · twelve pellets',{shots:12}],['Buckshot · +15% damage',{power:1.15}],['Drum magazine · 35% shorter reload',{reload:.65}],['Storm shot · seventeen pellets in the same cone',{shots:17}],['Wall of lead · 35 pellets, each deals triple damage',{shots:35,power:3}]],
     [['Choke · +15% range',{reach:1.15}],['Heavy pellets · +15% damage',{power:1.15}],['Breacher load · double pellet damage within 65 units',{closePower:2}],['Stopping power · +50% damage and a 2s slow',{power:1.5,slow:2}],['Breach cannon · fourfold point-blank damage and a 1s stun',{closePower:4,stun:1}]]
   ],
   rocket: [
@@ -46,7 +46,7 @@ const upgrades = {
     [['Motor winding · 10% shorter reload',{reload:.9}],['Long barrel · +15% range',{reach:1.15}],['Heavy rounds · +55% damage',{power:1.55}],['Depleted cores · bypass armor and fire 20% faster',{ignoreArmor:true,reload:1/1.2}],['Flywheel · double base damage, repeated hits ramp up to fourfold damage',{power:2,focusStep:.35,focusMax:4}]]
   ],
   mortar: [
-    [['Wider shells · blast radius 37',{blast:37}],['Heavy shells · +20% damage',{power:1.2}],['Barrage · 35% shorter reload',{reload:.65}],['Siege shells · radius 46, eight targets and +70% damage',{blast:46,areaCap:8,power:1.7}],['Earthbreaker · radius 76, twelve targets and fivefold shell damage',{blast:76,areaCap:12,power:5}]],
+    [['Wider shells · blast radius 51',{blast:51}],['Heavy shells · +20% damage',{power:1.2}],['Barrage · 35% shorter reload',{reload:.65}],['Siege shells · radius 61, nine targets and +70% damage',{blast:61,areaCap:9,power:1.7}],['Earthbreaker · radius 76, twelve targets and fivefold shell damage',{blast:76,areaCap:12,power:5}]],
     [['Long tube · +15% range',{reach:1.15}],['Concussion · slows for 1.5s',{slow:1.5}],['Pressure wave · pushes blast survivors',{push:105}],['Flashbang · stuns the blast zone for 2s',{stun:2}],['Aftershock · 5s area stun and triple fire rate',{stun:5,reload:1/3}]]
   ],
   seeker: [
@@ -54,8 +54,8 @@ const upgrades = {
     [['Dense charge · +20% missile damage',{power:1.2}],['Fast motors · 50% faster missiles',{missileSpeed:825}],['Hunter charge · double damage to brutes',{brutePower:2}],['Rearm · 35% shorter reload',{reload:.65}],['Twin launch · two missiles per target and double damage',{shots:2,power:2}]]
   ],
   solar: [
-    [['Hot lens · +20% direct damage',{power:1.2}],['Long mirror · +15% range',{reach:1.15}],['Deep core · bonus rises to 10% of max HP, capped at 400',{hpShare:.1,hpCap:400}],['Fast ignition · 35% shorter recharge',{reload:.65}],['Star core · 25% of max HP in bonus damage, capped at 2200',{hpShare:.25,hpCap:2200}]],
-    [['Afterglow · burns for 12 damage/s for 2s',{extraDot:12,extraDuration:2}],['Thermal sink · 15% shorter recharge',{reload:.85}],['Kiln · adds 28 burn damage/s and 2s duration',{extraDot:28,extraDuration:2}],['Flare · double impact damage below half health',{finishAt:.5,finishPower:2}],['Supernova · triple impact below half health and +180 burn damage/s',{finishAt:.5,finishPower:3,extraDot:180}]]
+    [['Hot lens · +20% direct damage',{power:1.2}],['Long mirror · +15% range',{reach:1.15}],['Deep core · bonus rises to 10% of max HP, capped at 400',{hpShare:.1,hpCap:400}],['Fast ignition · 35% shorter recharge',{reload:.65}],['Star core · 25% of max HP in bonus damage, capped at 2200, sweeps up to 16 neighbors within 145 units',{hpShare:.25,hpCap:2200,sweepCap:16,sweepRadius:145}]],
+    [['Afterglow · burns for 12 damage/s for 2s',{extraDot:12,extraDuration:2}],['Thermal sink · 15% shorter recharge',{reload:.85}],['Kiln · adds 28 burn damage/s and 2s duration',{extraDot:28,extraDuration:2}],['Flare · double impact damage below half health',{finishAt:.5,finishPower:2}],['Supernova · triple impact below half health with +180 burn damage/s and three full shots of reserve heat',{finishAt:.5,finishPower:3,extraDot:180,reserve:3}]]
   ],
   disc: [
     [['Honed edge · +20% damage',{power:1.2}],['Wider blade · hits four targets per pass',{pierce:4}],['Serrations · slows cut targets for 1s',{slow:1}],['Mill wheel · +60% cutting damage and 20% shorter reload',{reload:.8,power:1.6}],['Harvest wheel · two fanned blades, each dealing triple damage',{shots:2,power:3}]],
@@ -83,9 +83,9 @@ const trackNames={
   pulse:['Resonator','Repulsor field']
 };
 const towerDefaults = {
-  seeker:{locks:4,missileSpeed:550},solar:{hpShare:.07,hpCap:260},cannon:{ignoreArmor:true},
+  seeker:{locks:4,missileSpeed:550},minigun:{spin:0},solar:{hpShare:.07,hpCap:260,sweepCap:8,sweepRadius:96,reserve:.3},cannon:{ignoreArmor:true},
   disc:{pierce:3,returnPower:1},prism:{focus:1,focusStep:.3,focusMax:2.2,split:0,splitReach:55,splitPower:.5},
-  sniper:{pierce:2}, shotgun:{shots:7}, rocket:{blast:27,areaCap:4}, mortar:{blast:32,areaCap:5},
+  sniper:{pierce:2}, shotgun:{shots:9,closePower:1.5}, rocket:{blast:27,areaCap:4}, mortar:{blast:43,areaCap:7},
   lightning:{chains:4,jump:90,stun:.5}, pulse:{areaCap:5,push:35,stun:.25,stunChance:.08},
   frost:{slow:2}, flame:{duration:2,dot:4,pierce:3,heatRetention:.5}, venom:{duration:2,dot:4},
   barracks:{damage:4,rifleRate:.8,cap:3,soldierHp:45,regen:0}
@@ -105,7 +105,7 @@ function applyTier(t,changes){
   Object.assign(t,settings);
 }
 const tuning={damage:.04,speed:.03,range:.02};
-function tuningCost(t){return 20+15*Object.values(t.ranks).reduce((a,b)=>a+b,0);}
+function tuningCost(t,stat){return 20+15*t.ranks[stat];}
 function tune(t,stat){
   // Use a ratio of successive ranks so later chain multipliers commute with tuning.
   const rank=t.ranks[stat]++,step=tuning[stat];
